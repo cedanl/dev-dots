@@ -1,12 +1,10 @@
 # =====================
 # File System & Directory Navigation
 # =====================
-if command -v eza &> /dev/null; then
-  alias ls='eza -lh --group-directories-first --icons=auto'
-  alias lsa='ls -a'
-  alias lt='eza --tree --level=2 --long --icons --git'
-  alias lta='lt -a'
-fi
+alias ls='eza -lh --group-directories-first --icons=auto'
+alias lsa='ls -a'
+alias lt='eza --tree --level=2 --long --icons --git'
+alias lta='lt -a'
 
 # Directory Shortcuts
 alias ..='cd ..'
@@ -17,16 +15,12 @@ alias ....='cd ../../..'
 # =====================
 # Fuzzy Finder & Previews
 # =====================
-if command -v fzf &> /dev/null && command -v batcat &> /dev/null; then
-  alias ff="fzf --preview 'batcat --style=numbers --color=always {}'"
-fi
+alias ff="fzf --preview 'batcat --style=numbers --color=always {}'"
 
 # =====================
 # File Viewing
 # =====================
-if command -v batcat &> /dev/null; then
-  alias bat="batcat"
-fi
+alias bat="batcat"
 
 # =====================
 # Smart cd with zoxide

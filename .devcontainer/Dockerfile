@@ -14,6 +14,7 @@ RUN apt-get update && \
         fzf \
         tree-sitter-cli \
         fd-find \
+        bat \
         jq \
         wget \
         gnupg \
@@ -63,6 +64,16 @@ RUN git config --system core.pager delta && \
 RUN curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep_14.1.1-1_amd64.deb && \
     dpkg -i ripgrep_14.1.1-1_amd64.deb && \
     rm ripgrep_14.1.1-1_amd64.deb
+
+# Install eza (modern ls replacement)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor -o /etc/apt/keyrings/gierens.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" > /etc/apt/sources.list.d/gierens.list && \
+    chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends eza && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm /etc/apt/sources.list.d/gierens.list
 
 # Install qsv from external repo (gnupg now available)
 RUN wget -O - https://dathere.github.io/qsv-deb-releases/qsv-deb.gpg | \
