@@ -4,18 +4,13 @@ set -euo pipefail
 echo "🔥 Starting post-create.sh..."
 echo "👤 Running as: $(id)"
 
-# FIXED PATH (ensures ALL CLIs work)
-if ! grep -q '.local/bin' "$HOME/.bashrc"; then
-  echo 'export PATH="$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin:$PATH"' >> "$HOME/.bashrc"
-fi
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin:$PATH"
-
-# Verify ALL CLIs work
+# Verify key CLIs are available (all installed via Dockerfile)
 echo "✅ CLIs available:"
-for cli in opencode claude copilot; do
-  which "$cli" 2>/dev/null && echo "  ✅ $cli: $(which $cli)" || echo "  ❌ $cli: missing"
+for cli in nvim opencode uv starship zoxide; do
+  which "$cli" 2>/dev/null && echo "  ✅ $cli: $(which $cli)" || echo "  ⚠️  $cli: missing"
 done
 
+echo "✅ Post-create complete. Run 'nvim .' or 'tdl opencode' to get started."
 # LazyVim setup Setting up LazyV
 echo "✨im..."
 CONFIG_DIR="$HOME/.config/nvim"
