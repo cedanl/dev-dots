@@ -136,7 +136,7 @@ USER ${USERNAME}
 
 # User environment
 ENV PATH="/home/${USERNAME}/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin"
-ENV FZF_DEFAULT_COMMAND="fd --type f"
+ENV FZF_DEFAULT_COMMAND="fdfind --type f"
 
 # Install OpenCode CLI
 RUN curl -fsSL https://opencode.ai/install | bash
