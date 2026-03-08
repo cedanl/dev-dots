@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM debian:bookworm-slim
 
 # Install all system dependencies first (including gnupg for qsv)
 RUN apt-get update && \
@@ -12,13 +12,23 @@ RUN apt-get update && \
         locales \
         xz-utils \
         fzf \
-        tree-sitter-cli \
         fd-find \
         bat \
         jq \
         wget \
         gnupg \
         openssh-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Node.js LTS (for npm/Slidev and other Node-based tools)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install R base (for R programming and data science)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        r-base && \
     rm -rf /var/lib/apt/lists/*
 
 # Install GitHub CLI (gh)
@@ -127,8 +137,8 @@ RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
 COPY --chown=${USERNAME}:${USERNAME} bash/.bashrc /home/${USERNAME}/.bashrc
 COPY --chown=${USERNAME}:${USERNAME} bash/.config/ /home/${USERNAME}/.config/
 COPY --chown=${USERNAME}:${USERNAME} starship/.config/starship.toml /home/${USERNAME}/.config/starship.toml
-COPY --chown=${USERNAME}:${USERNAME} .devcontainer/python-uv/tmux.conf /home/${USERNAME}/.tmux.conf
-COPY --chown=${USERNAME}:${USERNAME} .devcontainer/python-uv/tmux-dev-layouts.sh /home/${USERNAME}/.tmux-dev-layouts.sh
+COPY --chown=${USERNAME}:${USERNAME} .devcontainer/tmux.conf /home/${USERNAME}/.tmux.conf
+COPY --chown=${USERNAME}:${USERNAME} .devcontainer/tmux-dev-layouts.sh /home/${USERNAME}/.tmux-dev-layouts.sh
 RUN chmod +x /home/${USERNAME}/.tmux-dev-layouts.sh
 
 WORKDIR /workspace
