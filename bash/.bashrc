@@ -1,4 +1,7 @@
 # ~/.bashrc: executed by bash(1) for non-login shells.
+
+# Always use modern terminal definition for correct color support
+export TERM=xterm-256color
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
