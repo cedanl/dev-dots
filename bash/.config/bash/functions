@@ -4,6 +4,19 @@
 # =====================
 compress() { tar -czf "${1%/}.tar.gz" "${1%/}"; }
 
+# =====================
+# CSV Exploration Helper
+# =====================
+csvlens() {
+  if [ "$#" -eq 0 ]; then
+    local file
+    file=$(fdfind . . --type f --extension csv | fzf --prompt='CSV file> ')
+    [ -n "$file" ] && command csvlens "$file"
+  else
+    command csvlens "$@"
+  fi
+}
+# Usage: csvlens (fuzzy-pick CSV), csvlens file.csv (direct open)
 
 # =====================
 # APT & Package Management
@@ -76,4 +89,3 @@ __fzf_history__() {
   fi
 }
 bind -x '"\C-r": __fzf_history__'
-
