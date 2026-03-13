@@ -1,5 +1,40 @@
 
 # =====================
+# Claude Setup
+# =====================
+claude-setup() {
+  local secrets="$HOME/.claude/secrets.sh"
+
+  # Ensure the secrets file exists
+  if [ ! -f "$secrets" ]; then
+    mkdir -p "$(dirname -- "$secrets")"
+    cat > "$secrets" <<'EOF'
+# Claude Foundry secrets 4 fill these in after container creation
+# Edit this file: Use 'claude-setup' or edit directly at ~/.claude/secrets.sh
+export ANTHROPIC_FOUNDRY_API_KEY=""
+export ANTHROPIC_FOUNDRY_RESOURCE=""
+EOF
+    echo "[claude-setup] Created template secrets file: $secrets"
+  fi
+
+
+  # Always use nvim for editing
+  if ! command -v nvim >/dev/null 2>&1; then
+    echo "[claude-setup] Error: nvim (Neovim) is not installed. Please install it to proceed." >&2
+    return 1
+  fi
+  nvim "$secrets"
+
+  # Source the secrets file
+  if source "$secrets"; then
+    echo "Claude secrets loaded."
+  else
+    echo "[claude-setup] Error: Failed to source secrets from $secrets. Please check syntax or permissions." >&2
+    return 2
+  fi
+}
+
+# =====================
 # Compression & Archiving
 # =====================
 compress() { tar -czf "${1%/}.tar.gz" "${1%/}"; }

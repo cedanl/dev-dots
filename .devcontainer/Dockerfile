@@ -173,8 +173,17 @@ USER ${USERNAME}
 ENV PATH="/home/${USERNAME}/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin"
 ENV FZF_DEFAULT_COMMAND="fdfind --type f"
 
+# Claude / Anthropic environment (non-secret, baked in)
+ENV CLAUDE_CODE_USE_FOUNDRY=1 \
+    ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-6 \
+    ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6 \
+    ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-6
+
 # Install OpenCode CLI
 RUN curl -fsSL https://opencode.ai/install | bash
+
+# Install Claude Code CLI
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # Install gh-dash as a gh extension
 RUN set -eux; \
