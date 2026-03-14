@@ -17,7 +17,8 @@ RUN apt-get update && \
         jq \
         wget \
         gnupg \
-        openssh-client && \
+        openssh-client \
+        man-db && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Node.js LTS (for npm/Slidev and other Node-based tools)
@@ -103,6 +104,13 @@ RUN set -eux; \
     chmod +x /usr/local/bin/csvlens; \
     rm -f /tmp/csvlens.tar.xz; \
     csvlens --version
+
+# Install tealdeer (fast tldr client)
+RUN set -eux; \
+    curl -fLo /usr/local/bin/tldr \
+        "https://github.com/dbrgn/tealdeer/releases/latest/download/tealdeer-linux-x86_64-musl"; \
+    chmod +x /usr/local/bin/tldr; \
+    tldr --version
 
 # Configure locale
 RUN sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && \
@@ -191,6 +199,9 @@ RUN curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.s
 # Bootstrap LazyVim starter config (plugins are downloaded on first nvim launch)
 RUN git clone --depth=1 https://github.com/LazyVim/starter /home/${USERNAME}/.config/nvim && \
     rm -rf /home/${USERNAME}/.config/nvim/.git
+
+# Pre-populate tealdeer (tldr) page cache
+RUN tldr --update && echo "tealdeer cache updated" || echo "WARNING: tealdeer cache update failed; run 'tldr --update' manually"
 
 # Default command
 CMD ["bash"]
