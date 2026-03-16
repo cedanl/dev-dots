@@ -17,8 +17,7 @@ RUN apt-get update && \
         jq \
         wget \
         gnupg \
-        openssh-client \
-        man-db && \
+        openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Node.js LTS (for npm/Slidev and other Node-based tools)
