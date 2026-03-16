@@ -150,3 +150,31 @@ __fzf_history__() {
   fi
 }
 bind -x '"\C-r": __fzf_history__'
+# =====================
+# GitHub Clone Helper
+# =====================
+gclone() {
+  local owner repo
+  owner="${1:-$GITHUB_USER}"   # optional: pass user/org; default: your login
+
+  if [ -z "$owner" ]; then
+    owner="$(gh api user --jq '.login')" || return 1
+  fi
+
+  repo="$(
+    gh repo list "$owner" \
+      --limit 1000 \
+      --json nameWithOwner,description \
+      --jq '.[] | "\(.nameWithOwner)\t\(.description // "")"' |
+    fzf --prompt="Select repo to clone: " \
+        --with-nth=1,2 \
+        --delimiter='\t' \
+        --ansi |
+    cut -f1
+  )" || return 1
+
+  [ -z "$repo" ] && echo "No repo selected" && return 1
+
+  gh repo clone "$repo"
+}
+
