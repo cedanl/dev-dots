@@ -65,6 +65,29 @@ EOF
 # =====================
 compress() { tar -czf "${1%/}.tar.gz" "${1%/}"; }
 
+extract() {
+  if [ -z "$1" ]; then
+    echo "Usage: extract <archive>"
+    return 1
+  fi
+  if [ ! -f "$1" ]; then
+    echo "'$1' is not a file"
+    return 1
+  fi
+  case "$1" in
+    *.tar.gz|*.tgz)    tar -xzf "$1" ;;
+    *.tar.bz2|*.tbz2)  tar -xjf "$1" ;;
+    *.tar.xz)           tar -xJf "$1" ;;
+    *.tar)              tar -xf  "$1" ;;
+    *.zip)              unzip    "$1" ;;
+    *.gz)               gunzip   "$1" ;;
+    *.bz2)              bunzip2  "$1" ;;
+    *.xz)               unxz     "$1" ;;
+    *)                  echo "Cannot extract '$1': unsupported format" ; return 1 ;;
+  esac
+}
+# Usage: extract <archive> – auto-detect and extract any common archive format
+
 # =====================
 # CSV Exploration Helper
 # =====================
@@ -78,6 +101,26 @@ csvlens() {
   fi
 }
 # Usage: csvlens (fuzzy-pick CSV), csvlens file.csv (direct open)
+
+# =====================
+# Interactive Content Search
+# =====================
+rgf() {
+  if [ "$#" -eq 0 ]; then
+    echo "Usage: rgf <pattern> [rg options]"
+    return 1
+  fi
+  local result
+  result=$(
+    rg --color=always --line-number --no-heading "$@" 2>/dev/null |
+      fzf --ansi \
+          --delimiter ':' \
+          --preview 'batcat --color=always --style=numbers --highlight-line {2} {1}' \
+          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+  )
+  [ -n "$result" ] && echo "$result"
+}
+# Usage: rgf <pattern> – ripgrep search with fzf preview; outputs the selected file:line
 
 # =====================
 # APT & Package Management
@@ -132,6 +175,9 @@ apt-fzf-purge() {
 # =====================
 # Shell & History Utilities
 # =====================
+mkd() { mkdir -p "$@" && cd "${!#}"; }
+# Usage: mkd path/to/dir – create directory (and parents) then cd into it
+
 zd() {
   if [ $# -eq 0 ]; then
     builtin cd ~ && return
@@ -150,6 +196,42 @@ __fzf_history__() {
   fi
 }
 bind -x '"\C-r": __fzf_history__'
+
+# =====================
+# Interactive Process Management
+# =====================
+ps-fzf() {
+  local pid
+  pid=$(ps aux |
+    fzf --header-lines=1 \
+        --prompt='Kill process> ' \
+        --preview 'echo {}' \
+        --preview-window=down:3:wrap |
+    awk '{print $2}')
+  if [ -n "$pid" ]; then
+    read -r -p "Send SIGTERM to PID $pid? [y/N] " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] && kill "$pid" && echo "Sent SIGTERM to PID $pid" || echo "Aborted."
+  fi
+}
+# Usage: ps-fzf – interactively select a running process and send SIGTERM
+
+# =====================
+# Documentation & Help
+# =====================
+tldrf() {
+  if ! command -v tldr >/dev/null 2>&1; then
+    echo "tldr (tealdeer) is not installed."
+    return 1
+  fi
+  local cmd
+  cmd=$(tldr --list 2>/dev/null |
+    fzf --prompt='tldr> ' \
+        --preview='tldr {}' \
+        --preview-window='right:70%:wrap')
+  [ -n "$cmd" ] && tldr "$cmd"
+}
+# Usage: tldrf – fuzzy-pick a command to view its tldr (tealdeer) page
+
 # =====================
 # GitHub Clone Helper
 # =====================
