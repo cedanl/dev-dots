@@ -10,7 +10,8 @@ ARG CSVLENS_VERSION="0.15.1"
 ARG TEALDEER_VERSION="1.8.1"
 ARG NEOVIM_VERSION="0.11.6"
 ARG GH_DASH_VERSION="4.23.1"
-ARG YAZI_VERSION="26.1.22"
+ARG TOKEI_VERSION="12.1.2"
+ARG ONEFETCH_VERSION="2.22.1"
 ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
@@ -104,16 +105,22 @@ RUN wget -O - https://dathere.github.io/qsv-deb-releases/qsv-deb.gpg | \
     rm -rf /var/lib/apt/lists/* && \
     rm /etc/apt/sources.list.d/qsv.list
 
-# Install yazi (terminal file manager)
-# Using .zip instead of .deb to avoid heavy preview deps (ffmpeg, imagemagick, etc.)
+# Install tokei (code statistics)
 RUN set -eux; \
-    curl -Lo /tmp/yazi.zip \
-        "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VERSION}/yazi-x86_64-unknown-linux-musl.zip"; \
-    unzip -q /tmp/yazi.zip -d /tmp/yazi; \
-    mv /tmp/yazi/yazi-x86_64-unknown-linux-musl/yazi /usr/local/bin/yazi; \
-    mv /tmp/yazi/yazi-x86_64-unknown-linux-musl/ya /usr/local/bin/ya; \
-    rm -rf /tmp/yazi /tmp/yazi.zip; \
-    yazi --version
+    curl -Lo /tmp/tokei.tar.gz \
+        "https://github.com/XAMPPRocky/tokei/releases/download/v${TOKEI_VERSION}/tokei-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -C /tmp -xzf /tmp/tokei.tar.gz tokei; \
+    mv /tmp/tokei /usr/local/bin/tokei; \
+    rm /tmp/tokei.tar.gz; \
+    tokei --version
+
+# Install onefetch (git repo summary)
+RUN set -eux; \
+    curl -Lo /tmp/onefetch.deb \
+        "https://github.com/o2sh/onefetch/releases/download/v${ONEFETCH_VERSION}/onefetch_amd64.deb"; \
+    dpkg -i /tmp/onefetch.deb; \
+    rm /tmp/onefetch.deb; \
+    onefetch --version
 
 # Install csvlens (interactive CSV viewer)
 RUN set -eux; \

@@ -176,5 +176,11 @@ gclone() {
   [ -z "$repo" ] && echo "No repo selected" && return 1
 
   gh repo clone "$repo"
+
+  local dir="${repo##*/}"
+  if cd "$dir" 2>/dev/null; then
+    onefetch 2>/dev/null || true
+    tokei 2>/dev/null || true
+  fi
 }
 
