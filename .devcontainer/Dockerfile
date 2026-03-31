@@ -11,7 +11,7 @@ ARG TEALDEER_VERSION="1.8.1"
 ARG NEOVIM_VERSION="0.11.6"
 ARG GH_DASH_VERSION="4.23.1"
 ARG TOKEI_VERSION="12.1.2"
-ARG ONEFETCH_VERSION="2.22.1"
+ARG ONEFETCH_VERSION="2.22.0"
 ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
@@ -115,11 +115,14 @@ RUN set -eux; \
     tokei --version
 
 # Install onefetch (git repo summary)
+# Using linux tar.gz instead of .deb: newer .deb releases require glibc 2.39,
+# but Debian bookworm-slim only ships glibc 2.36.
 RUN set -eux; \
-    curl -Lo /tmp/onefetch.deb \
-        "https://github.com/o2sh/onefetch/releases/download/v${ONEFETCH_VERSION}/onefetch_amd64.deb"; \
-    dpkg -i /tmp/onefetch.deb; \
-    rm /tmp/onefetch.deb; \
+    curl -Lo /tmp/onefetch.tar.gz \
+        "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux.tar.gz"; \
+    tar -C /tmp -xzf /tmp/onefetch.tar.gz; \
+    mv /tmp/onefetch /usr/local/bin/onefetch; \
+    rm /tmp/onefetch.tar.gz; \
     onefetch --version
 
 # Install csvlens (interactive CSV viewer)
