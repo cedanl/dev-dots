@@ -1,0 +1,65 @@
+site_name: dev-dots handboek
+site_description: Handleiding voor de dev-dots devcontainer — tools, sneltoetsen en AI-workflows
+site_url: https://cedanl.github.io/dev-dots/
+repo_url: https://github.com/cedanl/dev-dots
+repo_name: cedanl/dev-dots
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: nl
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Lichte modus
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Donkere modus
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+nav:
+  - Welkom: index.md
+  - Terminal & tmux: navigatie.md
+  - Editor: editor.md
+  - Git: git.md
+  - Shell: shell.md
+  - AI-workflows: ai.md
+  - Extra tools: tools.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search:
+      lang: nl
