@@ -1,13 +1,44 @@
 # Editor — Neovim
 
-De editor is Neovim met [LazyVim](https://www.lazyvim.org/) als startconfiguratie. LazyVim laadt plugins slim en geeft je meteen een volwaardige IDE-ervaring. Bij de eerste `nvim`-start worden plugins gedownload.
+De editor is Neovim met [LazyVim](https://www.lazyvim.org/) als startconfiguratie. LazyVim laadt plugins slim en geeft je meteen een volwaardige IDE-ervaring.
 
 ```bash
-nvim .       # open de huidige map als project
+nvim .           # open de huidige map als project
 nvim bestand.py
 ```
 
 De **leader-toets** is `Spatiebalk`.
+
+---
+
+## Eerste keer opstarten
+
+Bij de eerste `nvim`-start downloadt LazyVim alle plugins. Dat ziet er druk en chaotisch uit — wacht rustig tot het scherm stabiliseert, dan is alles klaar. Dit gebeurt maar één keer.
+
+---
+
+## Neovim is modaal
+
+Neovim heeft twee basismodi. Dit is het belangrijkste om te begrijpen:
+
+| Modus | Wat je doet |
+|---|---|
+| **Normale modus** | Navigeren, kopiëren, commando's uitvoeren — hier start je altijd |
+| **Invoermodus** | Tekst typen |
+
+| Toets | Actie |
+|---|---|
+| `i` | Ga naar invoermodus (vóór cursor) |
+| `a` | Ga naar invoermodus (na cursor) |
+| `o` | Nieuwe regel onder, ga naar invoermodus |
+| `Esc` | Terug naar normale modus |
+| `:w` | Sla op |
+| `:q` | Sluit (werkt alleen als er geen wijzigingen zijn) |
+| `:wq` | Sla op en sluit |
+| `:q!` | Sluit zonder opslaan |
+
+!!! tip "Nieuw met vim?"
+    ThePrimeagen heeft een toegankelijke introductieserie: [Vim As Your Editor](https://www.youtube.com/watch?v=X6AR2RMB5tE). Verwacht een leercurve — maar zodra het klikt, ga je nooit meer terug.
 
 ---
 
@@ -83,4 +114,4 @@ De **leader-toets** is `Spatiebalk`.
 Voer `:Lazy update` uit om alle plugins bij te werken.
 
 !!! tip "LazyVim-extras"
-    LazyVim heeft uitbreidingen voor talen als Python, TypeScript, Go en meer. Bekijk `lazyvim.json` in `~/.config/nvim/` voor wat er actief is, of voeg extras toe via `:LazyExtras`.
+    LazyVim heeft uitbreidingen voor talen als Python, TypeScript, Go en meer. Bekijk `~/.config/nvim/lazyvim.json` voor wat er actief is, of voeg extras toe via `:LazyExtras`.

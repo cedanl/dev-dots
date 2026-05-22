@@ -32,14 +32,13 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 
 Open de repository in VS Code en kies **Dev Containers: Reopen in Container**. Na de post-create setup ben je klaar.
 
-Start een werksessie met tmux en open meteen je editor:
+Voer `onboard` uit voor een begeleide setup van GitHub-authenticatie en AI-sleutels:
 
 ```bash
-tmux
-nvim .
+onboard
 ```
 
-Of gebruik een van de AI-layouts om direct met een assistent te werken:
+Start daarna een werksessie:
 
 ```bash
 tmux
@@ -50,13 +49,45 @@ Dat opent Neovim, een Claude Code-sessie en een vrije terminal — naast elkaar 
 
 ---
 
-## Eerste keer opstarten
+## Een typische werksessie
 
-Voer `onboard` uit voor een begeleide setup van GitHub-authenticatie en AI-sleutels:
+Zo ziet een complete AI-codesessie eruit van begin tot eind:
 
 ```bash
-onboard
+# 1. Start tmux (houdt sessie levend ook als je venster sluit)
+tmux
+
+# 2. Ga naar je project
+cd mijn-project
+
+# 3. Open de AI-layout: Neovim + Claude Code + vrije terminal
+tdl claude
+
+# 4. Geef Claude een taak (in het Claude-paneel rechts)
+#    Claude leest je bestanden, schrijft code, voert tests uit
+
+# 5. Review de wijzigingen in Neovim (linker paneel)
+#    Space g g   → open lazygit
+#    spatiebalk  → stage bestanden
+#    c           → commit
+
+# 6. Maak een pull request (in de vrije terminal onder)
+gh pr create
 ```
 
-!!! tip "GitHub CLI"
-    Voer `gh auth login` eenmalig uit zodat `gh`, `lazygit` en `gclone` toegang hebben tot je repositories.
+---
+
+## Wat overleeft een container-rebuild?
+
+| Wat | Overleeft rebuild? |
+|---|---|
+| Bestanden in `/workspace` | Ja — gemount vanuit de host |
+| Dotfiles (`~/.bashrc`, etc.) | Ja — ingebakken in de image |
+| `~/.local` (npm globals, etc.) | Nee — opnieuw aanmaken na rebuild |
+| `~/.config/nvim/` (LazyVim) | Ja — ingebakken in de image |
+| LazyVim plugins (`~/.local/share/nvim`) | Nee — worden opnieuw gedownload bij eerste `nvim` |
+| Zoxide-geschiedenis | Nee — begint leeg na rebuild |
+| AI-sleutels (`~/.claude/secrets.sh`) | Nee — opnieuw instellen via `claude-setup` |
+
+!!! tip "Eerste keer na rebuild"
+    Start `nvim` één keer en wacht tot alle plugins geladen zijn. Voer daarna `onboard` uit om GitHub en AI opnieuw in te stellen.

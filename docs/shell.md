@@ -8,18 +8,23 @@ De shell is Bash met een laag productiviteitstools. Alles is geladen via `~/.bas
 
 ### zoxide — slimme cd
 
-`cd` is vervangen door zoxide. Het onthoudt mappen die je eerder hebt bezocht en springt er snel naartoe.
+`cd` is vervangen door zoxide. Het onthoudt mappen die je eerder hebt bezocht en springt er snel naartoe op basis van een gedeeltelijke naam.
+
+Stel dat je één keer naar een diep pad bent gegaan:
 
 ```bash
-cd project       # ga naar de map als die bestaat, anders zoekt zoxide
-cd               # ga naar home
+cd /workspace/klant/project-backend/src/api
 ```
 
-Na een paar sessies kun je typen:
+De volgende keer kun je typen:
 
 ```bash
-cd dots          # springt naar ~/projects/dev-dots als dat de beste match is
+cd api        # springt direct naar …/src/api
+cd backend    # springt naar …/project-backend
+cd klant      # springt naar …/klant (de best overeenkomende map)
 ```
+
+Hoe vaker je een map bezoekt, hoe hoger de prioriteit. Werkt meteen, wordt slimmer met gebruik.
 
 ### Directory-shortcuts
 
@@ -36,16 +41,16 @@ cd dots          # springt naar ~/projects/dev-dots als dat de beste match is
 ### ls met eza
 
 ```bash
-ls               # mooie lijst met iconen
+ls               # mooie lijst met iconen en bestandsformaten
 lsa              # inclusief verborgen bestanden
-lt               # boomstructuur (2 niveaus)
+lt               # boomstructuur (2 niveaus diep)
 lta              # boomstructuur inclusief verborgen
 ```
 
 ### Bestanden bekijken
 
 ```bash
-bat bestand.py   # syntaxgemarkeerde bestandsweergave
+bat bestand.py   # syntaxgemarkeerde bestandsweergave met regelnummers
 ```
 
 ---
@@ -55,10 +60,10 @@ bat bestand.py   # syntaxgemarkeerde bestandsweergave
 ### fzf — fuzzy finder
 
 ```bash
-ff               # zoek een bestand met preview (bat)
+ff               # zoek een bestand in de huidige map met live preview
 ```
 
-**In de shell-geschiedenis:** druk op `Ctrl+r` voor een fuzzy zoekbalk door alle eerdere commando's. Selecteer met `Enter` om het commando terug te laden.
+**Shell-geschiedenis:** druk op `Ctrl+r` voor een fuzzy zoekbalk door alle vorige commando's. Begin te typen, selecteer met de pijltjestoetsen, bevestig met `Enter` — het commando verschijnt meteen op de prompt.
 
 ### ripgrep
 
@@ -66,6 +71,7 @@ ff               # zoek een bestand met preview (bat)
 rg patroon           # zoek recursief in de huidige map
 rg patroon src/      # zoek in een specifieke map
 rg -t py patroon     # zoek alleen in Python-bestanden
+rg -l patroon        # toon alleen bestandsnamen, geen regels
 ```
 
 ---
@@ -84,28 +90,29 @@ decompress bestand.tar.gz
 Zoek en installeer apt-pakketten via een fuzzy picker:
 
 ```bash
-apt-fzf              # bladeren en installeren
+apt-fzf              # bladeren en installeren — geïnstalleerde pakketten staan gemarkeerd met *
 apt-fzf-purge        # bladeren en verwijderen
 ```
-
-Geïnstalleerde pakketten worden gemarkeerd met een `*`.
 
 ---
 
 ## Prompt — starship
 
-De prompt toont de huidige map en git-status compact:
+De prompt toont de huidige map, git-branch en status compact op één regel:
 
 ```
-~/project/src main ↑1 ✎ ➜
+~/workspace/project main ↑1 ✎ ➜
 ```
 
 | Symbool | Betekenis |
 |---|---|
-| `↑n` | n commits vóór op remote |
+| `↑n` | n commits vóór op remote (nog niet gepusht) |
 | `↓n` | n commits achter op remote |
+| `⇅` | Gedivergeerd van remote |
 | `✎` | Gewijzigde bestanden |
 | `◌` | Untracked bestanden |
 | `⦿` | Gestagede wijzigingen |
 | `✖` | Verwijderde bestanden |
 | `✓` | Alles up-to-date |
+| `➜` | Laatste commando geslaagd |
+| `✘` | Laatste commando mislukt (rood) |
