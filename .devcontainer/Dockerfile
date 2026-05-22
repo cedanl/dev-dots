@@ -7,17 +7,25 @@ ARG LAZYGIT_VERSION="0.60.0"
 ARG DELTA_VERSION="0.18.0"
 ARG RIPGREP_VERSION="15.1.0"
 ARG CSVLENS_VERSION="0.15.1"
-ARG TEALDEER_VERSION="1.8.1"
 ARG NEOVIM_VERSION="0.11.6"
-ARG GH_DASH_VERSION="4.23.1"
-ARG TOKEI_VERSION="12.1.2"
-ARG ONEFETCH_VERSION="2.22.0"
 ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Install all system dependencies first (including gnupg for qsv)
+# Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
+# ARCH_DEB : amd64 | arm64   (used by .deb packages and simple linux-* binaries)
+# ARCH_TAR : x86_64 | aarch64 (used by *-unknown-linux-* tarballs)
+# ARCH_NVIM: x86_64 | arm64   (lazygit + neovim use this mixed naming)
+ARG TARGETARCH
+RUN case "${TARGETARCH:-amd64}" in \
+      arm64) ARCH_DEB=arm64; ARCH_TAR=aarch64; ARCH_NVIM=arm64 ;; \
+      *)     ARCH_DEB=amd64; ARCH_TAR=x86_64;  ARCH_NVIM=x86_64 ;; \
+    esac && \
+    printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\n' \
+      "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" > /etc/arch_vars
+
+# Install all system dependencies first (including gnupg for eza/qsv repos)
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
@@ -54,18 +62,18 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     rm /etc/apt/sources.list.d/github-cli.list
 
 # Install lazygit
-RUN set -eux; \
+RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/lazygit.tar.gz \
-        "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"; \
+        "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${ARCH_NVIM}.tar.gz"; \
     tar -C /tmp -xzf /tmp/lazygit.tar.gz lazygit; \
     mv /tmp/lazygit /usr/local/bin/lazygit; \
     rm /tmp/lazygit.tar.gz; \
     lazygit --version
 
 # Install delta (better git diffs)
-RUN set -eux; \
+RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/delta.deb \
-        "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_amd64.deb"; \
+        "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_${ARCH_DEB}.deb"; \
     dpkg -i /tmp/delta.deb; \
     rm /tmp/delta.deb; \
     delta --version
@@ -79,11 +87,21 @@ RUN git config --system core.pager delta && \
     git config --system diff.colorMoved default
 
 # Install ripgrep
-RUN set -eux; \
-    curl -Lo /tmp/ripgrep.deb \
-        "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep_${RIPGREP_VERSION}-1_amd64.deb"; \
-    dpkg -i /tmp/ripgrep.deb; \
-    rm /tmp/ripgrep.deb; \
+# No arm64 .deb is published; arm64 falls back to the gnu tarball.
+RUN set -eux; . /etc/arch_vars; \
+    if [ "$ARCH_DEB" = "amd64" ]; then \
+        curl -Lo /tmp/ripgrep.deb \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep_${RIPGREP_VERSION}-1_amd64.deb"; \
+        dpkg -i /tmp/ripgrep.deb; \
+        rm /tmp/ripgrep.deb; \
+    else \
+        curl -Lo /tmp/ripgrep.tar.gz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-aarch64-unknown-linux-gnu.tar.gz"; \
+        tar -C /tmp -xzf /tmp/ripgrep.tar.gz; \
+        RG_BIN=$(find /tmp -name 'rg' -type f | head -n1); \
+        mv "$RG_BIN" /usr/local/bin/rg; \
+        rm -rf /tmp/ripgrep.tar.gz /tmp/ripgrep-${RIPGREP_VERSION}-aarch64-unknown-linux-gnu; \
+    fi; \
     rg --version
 
 # Install eza (modern ls replacement)
@@ -96,39 +114,10 @@ RUN mkdir -p /etc/apt/keyrings && \
     rm -rf /var/lib/apt/lists/* && \
     rm /etc/apt/sources.list.d/gierens.list
 
-# Install qsv from external repo (gnupg now available)
-RUN wget -O - https://dathere.github.io/qsv-deb-releases/qsv-deb.gpg | \
-    gpg --dearmor -o /usr/share/keyrings/qsv-deb.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/qsv-deb.gpg] https://dathere.github.io/qsv-deb-releases ./" > /etc/apt/sources.list.d/qsv.list && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qsv && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm /etc/apt/sources.list.d/qsv.list
-
-# Install tokei (code statistics)
-RUN set -eux; \
-    curl -Lo /tmp/tokei.tar.gz \
-        "https://github.com/XAMPPRocky/tokei/releases/download/v${TOKEI_VERSION}/tokei-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -C /tmp -xzf /tmp/tokei.tar.gz tokei; \
-    mv /tmp/tokei /usr/local/bin/tokei; \
-    rm /tmp/tokei.tar.gz; \
-    tokei --version
-
-# Install onefetch (git repo summary)
-# Using linux tar.gz instead of .deb: newer .deb releases require glibc 2.39,
-# but Debian bookworm-slim only ships glibc 2.36.
-RUN set -eux; \
-    curl -Lo /tmp/onefetch.tar.gz \
-        "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux.tar.gz"; \
-    tar -C /tmp -xzf /tmp/onefetch.tar.gz; \
-    mv /tmp/onefetch /usr/local/bin/onefetch; \
-    rm /tmp/onefetch.tar.gz; \
-    onefetch --version
-
 # Install csvlens (interactive CSV viewer)
-RUN set -eux; \
+RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/csvlens.tar.xz \
-        "https://github.com/YS-L/csvlens/releases/download/v${CSVLENS_VERSION}/csvlens-x86_64-unknown-linux-gnu.tar.xz"; \
+        "https://github.com/YS-L/csvlens/releases/download/v${CSVLENS_VERSION}/csvlens-${ARCH_TAR}-unknown-linux-gnu.tar.xz"; \
     tar -C /tmp -xJf /tmp/csvlens.tar.xz; \
     CSVLENS_BIN=$(find /tmp -maxdepth 2 -name 'csvlens' -type f | head -n1); \
     [ -z "$CSVLENS_BIN" ] && { echo "ERROR: csvlens binary not found after extraction"; exit 1; }; \
@@ -136,13 +125,6 @@ RUN set -eux; \
     chmod +x /usr/local/bin/csvlens; \
     rm -f /tmp/csvlens.tar.xz; \
     csvlens --version
-
-# Install tealdeer (fast tldr client)
-RUN set -eux; \
-    curl -fLo /usr/local/bin/tldr \
-        "https://github.com/dbrgn/tealdeer/releases/download/v${TEALDEER_VERSION}/tealdeer-linux-x86_64-musl"; \
-    chmod +x /usr/local/bin/tldr; \
-    tldr --version
 
 # Configure locale
 RUN sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && \
@@ -153,11 +135,11 @@ ENV LANG=en_US.UTF-8 \
     TZ=Europe/Amsterdam
 
 # Install Neovim
-RUN set -eux; \
+RUN set -eux; . /etc/arch_vars; \
     curl -L --retry 3 --fail -o /tmp/nvim.tar.gz \
-        "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz"; \
+        "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-${ARCH_NVIM}.tar.gz"; \
     tar -C /usr -xzf /tmp/nvim.tar.gz; \
-    ln -sf /usr/nvim-linux-x86_64/bin/nvim /usr/bin/nvim; \
+    ln -sf "/usr/nvim-linux-${ARCH_NVIM}/bin/nvim" /usr/bin/nvim; \
     rm /tmp/nvim.tar.gz; \
     nvim --version | head -n1
 
@@ -174,9 +156,9 @@ RUN groupadd --gid ${GID} ${USERNAME} && \
 RUN curl -sS https://starship.rs/install.sh | sh -s -- -y --version v${STARSHIP_VERSION}
 
 # Install zoxide (smart cd replacement)
-RUN set -eux; \
+RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/zoxide.deb \
-        "https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide_${ZOXIDE_VERSION}-1_amd64.deb"; \
+        "https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide_${ZOXIDE_VERSION}-1_${ARCH_DEB}.deb"; \
     dpkg -i /tmp/zoxide.deb; \
     rm /tmp/zoxide.deb; \
     zoxide --version
@@ -210,23 +192,12 @@ RUN curl -fsSL https://opencode.ai/install | bash
 # Install Claude Code CLI (unpinned: install script does not expose a version flag)
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
-# Install gh-dash as a gh extension
-RUN set -eux; \
-    GH_DASH_DIR="$HOME/.local/share/gh/extensions/gh-dash"; \
-    mkdir -p "$GH_DASH_DIR"; \
-    curl -fLo "$GH_DASH_DIR/gh-dash" \
-        "https://github.com/dlvhdr/gh-dash/releases/download/v${GH_DASH_VERSION}/gh-dash_v${GH_DASH_VERSION}_linux-amd64"; \
-    chmod +x "$GH_DASH_DIR/gh-dash"
-
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | UV_VERSION=${UV_VERSION} sh
 
 # Bootstrap LazyVim starter config (plugins are downloaded on first nvim launch)
 RUN git clone --depth=1 https://github.com/LazyVim/starter /home/${USERNAME}/.config/nvim && \
     rm -rf /home/${USERNAME}/.config/nvim/.git
-
-# Pre-populate tealdeer (tldr) page cache
-RUN tldr --update && echo "tealdeer cache updated" || echo "WARNING: tealdeer cache update failed; run 'tldr --update' manually"
 
 # Default command
 CMD ["bash"]
