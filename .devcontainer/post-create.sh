@@ -4,6 +4,9 @@ set -euo pipefail
 echo "🔥 Starting post-create.sh..."
 echo "👤 Running as: $(id)"
 
+# Install org-wide Claude/OpenCode skills from cedanl/.github
+npx --yes skills add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g
+
 # Verify key CLIs are available (all installed via Dockerfile)
 echo "✅ CLIs available:"
 for cli in nvim opencode claude uv starship zoxide node npm csvlens; do
