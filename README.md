@@ -1,83 +1,82 @@
 # dev-dots
 
-A single, multipurpose developer devcontainer: fast startup, strong terminal ergonomics, AI-ready workflows, and reproducible tooling.
+Een devcontainer voor ontwikkelaars: snelle opstarttijd, sterke terminal-ergonomie, AI-gerichte workflows en reproduceerbare tooling.
 
-This repository combines dotfiles, container setup scripts, and workspace automation so any project can boot into a consistent, high-signal development environment.
+Deze repository combineert dotfiles, container-setupscripts en werkruimteautomatisering zodat elk project kan opstarten in een consistente, overzichtelijke ontwikkelomgeving.
 
-## Vision
+## Visie
 
-`dev-dots` is an opinionated, production-ready devcontainer built to cover the full range of everyday development work — Python, data, content, and beyond — in a single container:
+`dev-dots` is een eigenzinnige, productieklare devcontainer gebouwd voor het volledige dagelijkse ontwikkelwerk — Python, data, content en meer — in één container:
 
-- Reproducible CLI toolchain
-- Excellent shell UX out of the box
-- AI-assisted tmux layouts for rapid coding sessions
-- Minimal host setup required
+- Reproduceerbare CLI-toolchain
+- Uitstekende shell-ervaring direct uit de doos
+- AI-ondersteunde tmux-layouts voor snelle codesessies
+- Minimale installatie vereist op de hostmachine
 
-## What You Get Today
+## Wat je krijgt
 
-### Container Baseline
+### Containerbasis
 
-Defined in `.devcontainer/Dockerfile`:
+Gedefinieerd in `.devcontainer/Dockerfile`:
 
-- Debian bookworm-slim base image
-- Core dev tools: `git`, `curl`, `tmux`, `htop`, `jq`, `wget`, `fd-find`, `bat`, `openssh-client`, `build-essential`
-- Data and search utilities: `ripgrep`, `qsv`, `fzf`
-- Modern shell utilities: `eza` (ls replacement)
-- Node.js LTS (for npm and Node-based tools)
-- Latest Neovim install
-- Non-root `dev` user and workspace-ready permissions
-- CLI installs for `opencode`, `uv`, `starship`, and `zoxide`
-- Dotfiles pre-loaded: `.bashrc`, bash helpers, starship config, tmux config, tmux layout scripts
-- LazyVim starter pre-cloned to `~/.config/nvim` (plugins download on first `nvim` launch)
-- **Git tooling**: `lazygit` (TUI git client), `gh` (GitHub CLI), `delta` (syntax-highlighted diffs), `gh-dash` (GitHub dashboard TUI)
-- System-level git pager configured to use `delta` (user `~/.gitconfig` takes precedence)
+- Debian bookworm-slim basisimage met multi-architectuur ondersteuning (`amd64` en `arm64`)
+- Kerntools: `git`, `curl`, `tmux`, `htop`, `jq`, `wget`, `fd-find`, `bat`, `openssh-client`, `build-essential`
+- Zoek- en datatools: `ripgrep`, `fzf`, `csvlens`
+- Moderne shell-tools: `eza` (vervanging voor `ls`)
+- Node.js LTS (voor npm en Node-gebaseerde tools)
+- Nieuwste Neovim-installatie
+- Niet-root `dev`-gebruiker met workspace-rechten
+- CLI-installaties voor `opencode`, `claude`, `uv`, `starship` en `zoxide`
+- Dotfiles voorgeladen: `.bashrc`, bash-helpers, starship-config, tmux-config en tmux-layoutscripts
+- LazyVim-starterconfiguratie vooraf gekloond naar `~/.config/nvim` (plugins worden geladen bij eerste `nvim`-start)
+- **Git-tooling**: `lazygit` (TUI git-client), `gh` (GitHub CLI), `delta` (syntaxgemarkeerde diffs)
+- Systeem-level git-pager geconfigureerd met `delta` (gebruiker `~/.gitconfig` heeft voorrang)
 
-### Post-Create Provisioning
+### Post-create provisioning
 
-Defined in `.devcontainer/post-create.sh`:
+Gedefinieerd in `.devcontainer/post-create.sh`:
 
-- CLI availability verification (nvim, opencode, uv, starship, zoxide, node, npm, csvlens)
-- Git tooling availability summary on startup
-- Helpful tips printed on startup (lazygit, gh auth login, gh dash, tdl opencode)
+- Verificatie van beschikbaarheid van CLIs (nvim, opencode, claude, uv, starship, zoxide, node, npm, csvlens)
+- Samenvatting van git-tooling bij opstarten
+- Nuttige tips bij opstarten
 
-### Git Workflow Out of the Box
+### Git-workflow direct beschikbaar
 
-Host credentials are forwarded into the container via `devcontainer.json` bind mounts (readonly):
+Hostcredentials worden via `devcontainer.json` bind mounts (readonly) doorgegeven aan de container:
 
 - `~/.gitconfig` → `/home/dev/.gitconfig`
 - `~/.ssh/` → `/home/dev/.ssh/`
 
-Git operations (`git push`, `git pull`, SSH cloning) work inside the container without any extra setup.
+Git-operaties (`git push`, `git pull`, SSH-klonen) werken in de container zonder extra configuratie.
 
-Available git TUI tools:
+Beschikbare git-tools:
 
-| Tool | Command | Notes |
-|------|---------|-------|
-| lazygit | `lazygit` | Full-featured TUI git client; integrates with LazyVim |
-| GitHub CLI | `gh` | Baked in; run `gh auth login` once to enable authenticated ops |
-| gh-dash | `gh dash` | GitHub dashboard TUI (PRs, issues, notifications) |
-| delta | automatic | Syntax-highlighted diffs for every `git diff` / `git log -p` |
+| Tool | Commando | Toelichting |
+|------|----------|-------------|
+| lazygit | `lazygit` | Volledige TUI git-client; integreert met LazyVim |
+| GitHub CLI | `gh` | Ingebouwd; voer `gh auth login` eenmalig uit voor authenticatie |
+| delta | automatisch | Syntaxgemarkeerde diffs voor elke `git diff` / `git log -p` |
 
-### Shell and Prompt Experience
+### Shell- en promptervaring
 
-From `bash/` and `starship/`:
+Vanuit `bash/` en `starship/`:
 
-- Modular bash config (`aliases`, `functions`, `rc`)
-- Productivity helpers (`fzf` history search, compression helpers, apt helpers)
-- `zoxide`-powered directory jumping
-- Starship prompt with concise git-aware status
+- Modulaire bash-config (`aliases`, `functions`, `rc`)
+- Productiviteitshelpers (`fzf`-zoeken in geschiedenis, compressiehelpers, apt-helpers)
+- `zoxide`-aangedreven directorynavigatie
+- Starship-prompt met compacte git-bewuste status
 
-### AI + tmux Workflows
+### AI + tmux-workflows
 
-The tmux layout helpers are designed for coding with one or more AI assistants in parallel:
+De tmux-layouthelpers zijn ontworpen voor coderen met één of meerdere AI-assistenten tegelijkertijd:
 
-- `tdl <ai> [second_ai]`: editor + AI pane(s) + terminal
-- `tdlm <ai> [second_ai]`: one dev window per subdirectory
-- `tsl <pane_count> <command>`: command swarm across panes
+- `tdl <ai> [second_ai]`: editor + AI-venster(s) + terminal
+- `tdlm <ai> [second_ai]`: één ontwikkelvenster per submap
+- `tsl <pane_count> <command>`: commando's parallel uitvoeren over meerdere vensters
 
-These commands are sourced from `~/.tmux-dev-layouts.sh`, which is pre-installed in the image and automatically loaded by `.bashrc`.
+Deze commando's komen uit `~/.tmux-dev-layouts.sh`, dat vooraf is geïnstalleerd in de image en automatisch wordt geladen door `.bashrc`.
 
-## Repository Layout
+## Mappenstructuur
 
 ```text
 .
@@ -98,29 +97,28 @@ These commands are sourced from `~/.tmux-dev-layouts.sh`, which is pre-installed
 └── README.md
 ```
 
-## Quick Start
+## Snel starten
 
-1. Open this repository in VS Code.
-2. Run `Dev Containers: Reopen in Container`.
-3. Wait for post-create setup to finish.
-4. Start working with `nvim .`, `tmux`, or your preferred workflow.
-5. *(Optional)* Run `gh auth login` once to enable `gh` and `gh dash` with your GitHub account.
+1. Open deze repository in VS Code.
+2. Voer `Dev Containers: Reopen in Container` uit.
+3. Wacht tot de post-create setup klaar is.
+4. Begin met werken via `nvim .`, `tmux` of je eigen workflow.
+5. *(Optioneel)* Voer `gh auth login` eenmalig uit om `gh` te activeren met je GitHub-account.
 
-## Goal State
+## Doelstelling
 
-Keep `dev-dots` a single, well-maintained multipurpose container that stays current with tooling updates and remains easy to extend for any project type. The focus is depth and quality over breadth of profiles:
+`dev-dots` blijft één goed onderhouden multipurpose container die actueel blijft met toolingupdates en eenvoudig uitbreidbaar is voor elk projecttype. De focus ligt op diepgang en kwaliteit, niet op een breed aanbod van profielen:
 
-- Keep shell/editor defaults portable and easy to override
-- Make every session AI-collaboration friendly by default
-- Preserve reproducibility with minimal manual machine setup
+- Shell- en editordefaults blijven overdraagbaar en eenvoudig overschrijfbaar
+- Elke sessie is standaard AI-samenwerkingsvriendelijk
+- Reproduceerbaarheid met minimale handmatige machinesetup
 
 ## Slidev
 
-To present from inside the container, run:
+Om een presentatie vanuit de container te geven:
 
 ```bash
 npm run dev -- --remote
 ```
 
-This exposes the Slidev dev server so you can access it from outside the container. Port `3030` is forwarded by default via `devcontainer.json`.
-
+Dit stelt de Slidev dev-server beschikbaar buiten de container. Poort `3030` wordt standaard doorgestuurd via `devcontainer.json`.

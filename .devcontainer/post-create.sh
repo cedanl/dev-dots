@@ -16,8 +16,6 @@ echo "🛠️  Git tooling available:"
 for cli in git lazygit gh delta; do
   which "$cli" >/dev/null 2>&1 && echo "  ✅ $cli: $(which $cli)" || echo "  ❌ $cli: missing"
 done
-GH_DASH_BIN="$HOME/.local/share/gh/extensions/gh-dash/gh-dash"
-[[ -x "$GH_DASH_BIN" ]] && echo "  ✅ gh-dash: $GH_DASH_BIN" || echo "  ❌ gh-dash: missing"
 
 # Collect all installed tool versions and write to tool-versions.txt
 # This file is .gitignore'd; useful for debugging when a build has issues.
@@ -58,23 +56,13 @@ echo "📋 Collecting tool versions → $TOOL_VERSIONS_FILE"
     done
   done < <(echo "$PATH" | tr ':' '\n' | awk '!seen[$0]++') | sort
 
-  # gh-dash lives outside PATH; append it separately
-  echo ""
-  echo "## gh extensions"
-  if [[ -x "$GH_DASH_BIN" ]]; then
-    _gdver=$("$GH_DASH_BIN" --version 2>&1 | grep -m1 '.' || true)
-    echo "  gh-dash: $_gdver"
-  else
-    echo "  gh-dash: (not found)"
-  fi
 } > "$TOOL_VERSIONS_FILE"
 
 echo "  ✅ Written to $TOOL_VERSIONS_FILE"
 
 echo ""
-echo "💡 Tip: Run 'gh auth login' to authenticate with GitHub (enables gh and gh-dash)"
+echo "💡 Tip: Run 'gh auth login' to authenticate with GitHub"
 echo "💡 Tip: Run 'lazygit' to open the lazygit TUI"
-echo "💡 Tip: Run 'gh dash' to open the GitHub dashboard TUI (after gh auth login)"
 echo "💡 Tip: Run 'tdl opencode' to open a tmux dev layout with OpenCode"
 echo "💡 Tip: Run 'claude-setup' to set your ANTHROPIC_FOUNDRY_API_KEY and ANTHROPIC_FOUNDRY_RESOURCE"
 echo "📺 Tmux layouts: tdl <ai>, tdlm <ai>, tsl <count> <cmd>"
