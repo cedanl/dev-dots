@@ -25,6 +25,8 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 | AI (Anthropic) | Claude Code |
 | AI (OpenAI-compatible) | OpenCode |
 | Python packages | uv |
+| Schermopname & GIF | ffmpeg |
+| Headless browser | Playwright (Chromium) |
 
 ---
 
