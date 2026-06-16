@@ -46,6 +46,7 @@ nav:
   - Shell: shell.md
   - AI-workflows: ai.md
   - Extra tools: tools.md
+  - Automatisering: automatisering.md
 
 markdown_extensions:
   - tables
