@@ -11,6 +11,7 @@ ARG NEOVIM_VERSION="0.11.6"
 ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
+ARG MICROMAMBA_VERSION="2.8.1-0"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
@@ -154,6 +155,18 @@ RUN apt-get update && \
         libasound2 libx11-6 libxext6 && \
     rm -rf /var/lib/apt/lists/*
 
+# Install micromamba (static binary; conda-compatible environment manager)
+# micromamba uses its own arch naming: linux-64 (amd64) / linux-aarch64 (arm64)
+RUN set -eux; . /etc/arch_vars; \
+    case "$ARCH_DEB" in \
+      arm64) MAMBA_ARCH="linux-aarch64" ;; \
+      *)     MAMBA_ARCH="linux-64" ;; \
+    esac; \
+    curl -fLo /usr/local/bin/micromamba \
+        "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${MAMBA_ARCH}"; \
+    chmod +x /usr/local/bin/micromamba; \
+    micromamba --version
+
 # Create non-root dev user
 ARG USERNAME=dev
 ARG UID=1000
@@ -196,6 +209,11 @@ ENV CLAUDE_CODE_USE_FOUNDRY=1 \
     ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-6 \
     ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6 \
     ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-6
+
+ENV MAMBA_ROOT_PREFIX="/home/${USERNAME}/micromamba"
+
+# Wire micromamba shell hook into ~/.bashrc (appends eval block)
+RUN micromamba shell init --shell bash --root-prefix ~/micromamba
 
 # Install OpenCode CLI (unpinned: install script does not expose a version flag)
 RUN curl -fsSL https://opencode.ai/install | bash
