@@ -11,19 +11,21 @@ ARG NEOVIM_VERSION="0.11.6"
 ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
+ARG MICROMAMBA_VERSION="2.8.1-0"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
 # ARCH_DEB : amd64 | arm64   (used by .deb packages and simple linux-* binaries)
 # ARCH_TAR : x86_64 | aarch64 (used by *-unknown-linux-* tarballs)
-# ARCH_NVIM: x86_64 | arm64   (lazygit + neovim use this mixed naming)
+# ARCH_NVIM: x86_64 | arm64        (lazygit + neovim use this mixed naming)
+# ARCH_MAMBA: linux-64 | linux-aarch64  (micromamba release naming)
 ARG TARGETARCH
 RUN case "${TARGETARCH:-amd64}" in \
-      arm64) ARCH_DEB=arm64; ARCH_TAR=aarch64; ARCH_NVIM=arm64 ;; \
-      *)     ARCH_DEB=amd64; ARCH_TAR=x86_64;  ARCH_NVIM=x86_64 ;; \
+      arm64) ARCH_DEB=arm64; ARCH_TAR=aarch64; ARCH_NVIM=arm64;  ARCH_MAMBA=linux-aarch64 ;; \
+      *)     ARCH_DEB=amd64; ARCH_TAR=x86_64;  ARCH_NVIM=x86_64; ARCH_MAMBA=linux-64 ;; \
     esac && \
-    printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\n' \
-      "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" > /etc/arch_vars
+    printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\nARCH_MAMBA=%s\n' \
+      "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" "$ARCH_MAMBA" > /etc/arch_vars
 
 # Install all system dependencies first (including gnupg for eza/qsv repos)
 RUN apt-get update && \
@@ -154,6 +156,13 @@ RUN apt-get update && \
         libasound2 libx11-6 libxext6 && \
     rm -rf /var/lib/apt/lists/*
 
+# Install micromamba (static binary; conda-compatible environment manager)
+RUN set -eux; . /etc/arch_vars; \
+    curl -fLo /usr/local/bin/micromamba \
+        "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${ARCH_MAMBA}"; \
+    chmod +x /usr/local/bin/micromamba; \
+    micromamba --version
+
 # Create non-root dev user
 ARG USERNAME=dev
 ARG UID=1000
@@ -196,6 +205,11 @@ ENV CLAUDE_CODE_USE_FOUNDRY=1 \
     ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-6 \
     ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6 \
     ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-6
+
+ENV MAMBA_ROOT_PREFIX="/home/${USERNAME}/micromamba"
+
+# Wire micromamba shell hook into ~/.bashrc (appends eval block)
+RUN micromamba shell init --shell bash --root-prefix ~/micromamba
 
 # Install OpenCode CLI (unpinned: install script does not expose a version flag)
 RUN curl -fsSL https://opencode.ai/install | bash
