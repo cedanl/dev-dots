@@ -17,14 +17,15 @@ ARG MICROMAMBA_VERSION="2.8.1-0"
 # Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
 # ARCH_DEB : amd64 | arm64   (used by .deb packages and simple linux-* binaries)
 # ARCH_TAR : x86_64 | aarch64 (used by *-unknown-linux-* tarballs)
-# ARCH_NVIM: x86_64 | arm64   (lazygit + neovim use this mixed naming)
+# ARCH_NVIM: x86_64 | arm64        (lazygit + neovim use this mixed naming)
+# ARCH_MAMBA: linux-64 | linux-aarch64  (micromamba release naming)
 ARG TARGETARCH
 RUN case "${TARGETARCH:-amd64}" in \
-      arm64) ARCH_DEB=arm64; ARCH_TAR=aarch64; ARCH_NVIM=arm64 ;; \
-      *)     ARCH_DEB=amd64; ARCH_TAR=x86_64;  ARCH_NVIM=x86_64 ;; \
+      arm64) ARCH_DEB=arm64; ARCH_TAR=aarch64; ARCH_NVIM=arm64;  ARCH_MAMBA=linux-aarch64 ;; \
+      *)     ARCH_DEB=amd64; ARCH_TAR=x86_64;  ARCH_NVIM=x86_64; ARCH_MAMBA=linux-64 ;; \
     esac && \
-    printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\n' \
-      "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" > /etc/arch_vars
+    printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\nARCH_MAMBA=%s\n' \
+      "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" "$ARCH_MAMBA" > /etc/arch_vars
 
 # Install all system dependencies first (including gnupg for eza/qsv repos)
 RUN apt-get update && \
@@ -156,14 +157,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install micromamba (static binary; conda-compatible environment manager)
-# micromamba uses its own arch naming: linux-64 (amd64) / linux-aarch64 (arm64)
 RUN set -eux; . /etc/arch_vars; \
-    case "$ARCH_DEB" in \
-      arm64) MAMBA_ARCH="linux-aarch64" ;; \
-      *)     MAMBA_ARCH="linux-64" ;; \
-    esac; \
     curl -fLo /usr/local/bin/micromamba \
-        "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${MAMBA_ARCH}"; \
+        "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${ARCH_MAMBA}"; \
     chmod +x /usr/local/bin/micromamba; \
     micromamba --version
 
