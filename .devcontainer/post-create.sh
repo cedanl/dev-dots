@@ -99,7 +99,12 @@ CONTAINER_SETTINGS=$(cat <<'JSONEOF'
     "PreToolUse": [
       {
         "matcher": "Read|Bash",
-        "command": "~/.claude/hooks/block-env-read.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/block-env-read.sh"
+          }
+        ]
       }
     ]
   },
