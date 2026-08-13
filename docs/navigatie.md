@@ -74,46 +74,17 @@ tmux gebruikt vi-stijl selectie in kopieermodus. Kopiëren werkt via **OSC 52**:
 
 ---
 
-## AI-layouts
+## Werksessie
 
-Dit zijn de krachtigste commando's in dev-dots. Ze bouwen in één keer een complete werkomgeving op.
-
-### `tdl` — editor + AI + terminal
+Zo ziet een complete AI-codesessie eruit:
 
 ```bash
-tdl claude       # Neovim + Claude Code + vrije terminal
-tdl opencode     # Neovim + OpenCode + vrije terminal
-tdl claude opencode  # Neovim + twee AI-assistenten
+cd mijn-project
+claude           # Claude Code (skip-permissions alias)
+# Neovim erbij:
+nvim .
+# of start OpenCode:
+opencode          # skip-permissions alias
 ```
 
-Het venster ziet er zo uit:
-
-```
-┌────────────────────┬──────────┐
-│                    │          │
-│      nvim .        │  claude  │
-│                    │          │
-├────────────────────┴──────────┤
-│         vrije terminal        │
-└───────────────────────────────┘
-```
-
-### `tdlm` — één layout per submap
-
-```bash
-tdlm claude
-```
-
-Voor elke submap van de huidige directory opent `tdlm` een apart tmux-venster met de volledige `tdl`-layout. Handig voor monorepo's of wanneer je meerdere services tegelijk wilt bijwerken.
-
-### `tsl` — parallelle zwerm
-
-```bash
-tsl 4 claude     # start Claude Code in 4 panelen tegelijk
-tsl 3 opencode
-```
-
-Alle panelen krijgen hetzelfde commando. Gebruik dit om meerdere taken tegelijkertijd te laten draaien.
-
-!!! tip
-    Al deze commando's vereisen een actieve tmux-sessie. Start `tmux` voordat je ze aanroept.
+Wil je meerdere terminals naast elkaar, gebruik dan handmatig tmux-panelen (`Ctrl+b %` / `Ctrl+b "`) of splits in VS Code's terminal.

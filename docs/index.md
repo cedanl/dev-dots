@@ -13,7 +13,7 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 | Editor | Neovim met LazyVim |
 | Terminal multiplexer | tmux |
 | Git TUI | lazygit |
-| GitHub CLI | gh |
+| GitHub CLI | gh, glab |
 | Git diffs | delta |
 | Fuzzy finder | fzf |
 | Moderne `ls` | eza |
@@ -24,7 +24,9 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 | CSV-viewer | csvlens |
 | AI (Anthropic) | Claude Code |
 | AI (OpenAI-compatible) | OpenCode |
+| AI-sessies | entire |
 | Python packages | uv |
+| Cloud & k8s | az, azcopy, azd, aws, kubectl, helm, flux, sops |
 | Schermopname & GIF | ffmpeg |
 | Headless browser | Playwright (Chromium) |
 
@@ -34,7 +36,7 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 
 Open de repository in VS Code en kies **Dev Containers: Reopen in Container**. Na de post-create setup ben je klaar.
 
-Voer `onboard` uit voor een begeleide setup van GitHub-authenticatie en AI-sleutels:
+Voer `onboard` uit voor een begeleide setup van GitHub-authenticatie, OpenCode, Claude en je git-identiteit:
 
 ```bash
 onboard
@@ -43,11 +45,11 @@ onboard
 Start daarna een werksessie:
 
 ```bash
-tmux
-tdl claude
+nvim .
+claude
 ```
 
-Dat opent Neovim, een Claude Code-sessie en een vrije terminal — naast elkaar in één venster.
+> Claude Code en OpenCode starten met `--dangerously-skip-permissions` (ingebakken als shell-alias) — binnen de devcontainer de bedoelde workflow.
 
 ---
 
@@ -56,24 +58,21 @@ Dat opent Neovim, een Claude Code-sessie en een vrije terminal — naast elkaar 
 Zo ziet een complete AI-codesessie eruit van begin tot eind:
 
 ```bash
-# 1. Start tmux (houdt sessie levend ook als je venster sluit)
-tmux
-
-# 2. Ga naar je project
+# 1. Ga naar je project
 cd mijn-project
 
-# 3. Open de AI-layout: Neovim + Claude Code + vrije terminal
-tdl claude
+# 2. Start Claude Code (skip-permissions alias)
+claude
 
-# 4. Geef Claude een taak (in het Claude-paneel rechts)
+# 3. Geef Claude een taak
 #    Claude leest je bestanden, schrijft code, voert tests uit
 
-# 5. Review de wijzigingen in Neovim (linker paneel)
+# 4. Review de wijzigingen in Neovim
 #    Space g g   → open lazygit
 #    spatiebalk  → stage bestanden
 #    c           → commit
 
-# 6. Maak een pull request (in de vrije terminal onder)
+# 5. Maak een pull request
 gh pr create
 ```
 
@@ -89,7 +88,7 @@ gh pr create
 | `~/.config/nvim/` (LazyVim) | Ja — ingebakken in de image |
 | LazyVim plugins (`~/.local/share/nvim`) | Nee — worden opnieuw gedownload bij eerste `nvim` |
 | Zoxide-geschiedenis | Nee — begint leeg na rebuild |
-| AI-sleutels (`~/.claude/secrets.sh`) | Nee — opnieuw instellen via `claude-setup` |
+| Git-identiteit (`user.name`, `user.email`) | Nee — opnieuw instellen via `onboard` |
 
 !!! tip "Eerste keer na rebuild"
-    Start `nvim` één keer en wacht tot alle plugins geladen zijn. Voer daarna `onboard` uit om GitHub en AI opnieuw in te stellen.
+    Start `nvim` één keer en wacht tot alle plugins geladen zijn. Voer daarna `onboard` uit om GitHub, OpenCode, Claude en je git-identiteit opnieuw in te stellen.
