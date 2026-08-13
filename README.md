@@ -7,27 +7,23 @@ Devcontainer voor dagelijks ontwikkelwerk — AI-first, reproduceerbaar, direct 
 - **Base**: Debian bookworm-slim, `amd64` + `arm64`
 - **Shell**: bash, starship, zoxide, eza, fzf, bat, fd, ripgrep, jq
 - **Editor**: Neovim + LazyVim
-- **Git**: lazygit, gh, delta
+- **Git**: lazygit, gh, glab, delta
 - **Data**: csvlens
-- **AI**: claude, opencode, org-skills via `cedanl/.github`
+- **AI**: claude, opencode, entire, org-skills via `cedanl/.github` — met `--dangerously-skip-permissions`
 - **Python**: uv
 - **Node**: LTS
+- **Cloud**: az, azcopy, azd, aws, kubectl, helm, flux, sops
 - **Media & automatisering**: ffmpeg, Playwright headless Chromium
 
 ## Snel starten
 
 1. Open in VS Code → `Dev Containers: Reopen in Container`
 2. Wacht op post-create
-3. Voer `gh auth login` eenmalig uit
-4. Aan de slag met `nvim .` of `tdl claude`
+3. Voer `onboard` uit — begeleide authenticatie (gh, opencode, claude) + git-identiteit
+4. Aan de slag met `nvim .` of `claude`
 
-## tmux-layouts
-
-```
-tdl <ai> [tweede_ai]   # editor + AI-venster(s) + terminal
-tdlm <ai> [tweede_ai]  # één venster per submap
-tsl <n> <commando>     # commando parallel over n vensters
-```
+> Claude Code en OpenCode starten met `--dangerously-skip-permissions` (ingebakken als shell-alias).
+> Git gebruikt per user een expliciete identiteit (ingesteld door `onboard`) en `user.useConfigOnly true`.
 
 ## Screenshots en GIFs automatiseren
 

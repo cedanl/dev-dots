@@ -12,6 +12,13 @@ ARG STARSHIP_VERSION="1.24.2"
 ARG UV_VERSION="0.11.1"
 ARG ZOXIDE_VERSION="0.9.9"
 ARG MICROMAMBA_VERSION="2.8.1-0"
+ARG AZCOPY_VERSION="10.26.0"
+ARG AZD_VERSION="1.9.5"
+ARG GLAB_VERSION="1.58.0"
+ARG SOPS_VERSION="3.10.2"
+ARG FLUX_VERSION="2.4.0"
+ARG KUBECTL_VERSION="1.31.14"
+ARG HELM_VERSION="3.16.0"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
@@ -64,6 +71,16 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     rm -rf /var/lib/apt/lists/* && \
     rm /etc/apt/sources.list.d/github-cli.list
 
+# Install Azure CLI (az)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ bookworm main" \
+        > /etc/apt/sources.list.d/azure-cli.list && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends azure-cli && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm /etc/apt/sources.list.d/azure-cli.list /etc/apt/keyrings/microsoft.gpg
+
 # Install lazygit
 RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/lazygit.tar.gz \
@@ -88,6 +105,14 @@ RUN git config --system core.pager delta && \
     git config --system delta.light false && \
     git config --system merge.conflictStyle diff3 && \
     git config --system diff.colorMoved default
+
+# Configure git credential helpers (gh for GitHub, glab for GitLab/Custom)
+# The "!<cmd>" form makes git run a shell command as the helper (gh/glab have
+# no standalone git-credential-* binary). gitlab.com is the default host; a
+# self-hosted instance needs an extra `credential.<host>.helper` entry.
+RUN git config --system init.defaultBranch main && \
+    git config --system credential.https://github.com.helper "!gh auth git-credential" && \
+    git config --system credential.https://gitlab.com.helper "!glab auth git-credential"
 
 # Install ripgrep
 # No arm64 .deb is published; arm64 falls back to the gnu tarball.
@@ -163,6 +188,90 @@ RUN set -eux; . /etc/arch_vars; \
     chmod +x /usr/local/bin/micromamba; \
     micromamba --version
 
+# Install azcopy (Azure Storage CLI)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/azcopy.tar.gz \
+        "https://github.com/Azure/azure-storage-azcopy/releases/download/v${AZCOPY_VERSION}/azcopy_linux_${ARCH_DEB}_${AZCOPY_VERSION}.tar.gz"; \
+    tar -C /tmp -xzf /tmp/azcopy.tar.gz; \
+    AZCOPY_BIN=$(find /tmp -maxdepth 3 -type f -name azcopy | head -n1); \
+    test -n "$AZCOPY_BIN"; \
+    mv "$AZCOPY_BIN" /usr/local/bin/azcopy; \
+    chmod +x /usr/local/bin/azcopy; \
+    rm -rf /tmp/azcopy.tar.gz /tmp/azcopy_linux_${ARCH_DEB}_*; \
+    azcopy --version
+
+# Install Azure Developer CLI (azd)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/azd.deb \
+        "https://github.com/Azure/azure-dev/releases/download/azure-dev-cli_${AZD_VERSION}/azd_${AZD_VERSION}_${ARCH_DEB}.deb"; \
+    dpkg -i /tmp/azd.deb; \
+    rm -f /tmp/azd.deb; \
+    azd version
+
+# Install kubectl (pinned upstream binary; avoids kubernetes apt repo version drift)
+RUN set -eux; . /etc/arch_vars; \
+    curl -fLo /usr/local/bin/kubectl \
+        "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH_DEB}/kubectl"; \
+    chmod +x /usr/local/bin/kubectl; \
+    kubectl version --client
+
+# Install Helm (pinned upstream binary)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/helm.tar.gz \
+        "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH_DEB}.tar.gz"; \
+    tar -C /tmp -xzf /tmp/helm.tar.gz; \
+    HELM_BIN=$(find /tmp -maxdepth 3 -type f -name helm | head -n1); \
+    test -n "$HELM_BIN"; \
+    mv "$HELM_BIN" /usr/local/bin/helm; \
+    chmod +x /usr/local/bin/helm; \
+    rm -rf /tmp/helm.tar.gz /tmp/linux-${ARCH_DEB}; \
+    helm version
+
+# Install sops (secrets encryption)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/sops \
+        "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.${ARCH_DEB}"; \
+    chmod +x /tmp/sops; \
+    mv /tmp/sops /usr/local/bin/sops; \
+    sops --version
+
+# Install glab (GitLab CLI; uses GitLab generic package API)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/glab.tar.gz \
+        "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/packages/generic/glab/${GLAB_VERSION}/glab_${GLAB_VERSION}_linux_${ARCH_DEB}.tar.gz"; \
+    tar -C /tmp -xzf /tmp/glab.tar.gz; \
+    GLAB_BIN=$(find /tmp -type f -path '*/bin/glab' | head -n1); \
+    test -n "$GLAB_BIN"; \
+    mv "$GLAB_BIN" /usr/local/bin/glab; \
+    chmod +x /usr/local/bin/glab; \
+    rm -rf /tmp/glab.tar.gz /tmp/bin /tmp/glab_*; \
+    glab version
+
+# Install Flux CD (pinned upstream binary)
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/flux.tar.gz \
+        "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_linux_${ARCH_DEB}.tar.gz"; \
+    tar -C /tmp -xzf /tmp/flux.tar.gz flux; \
+    mv /tmp/flux /usr/local/bin/flux; \
+    chmod +x /usr/local/bin/flux; \
+    rm -f /tmp/flux.tar.gz; \
+    flux --version
+
+# Install AWS CLI v2. The official installer only ships "latest", so we cannot
+# pin a version at build time; the released checksum verifies integrity of the
+# download. Track the actual version via post-create's tool-versions.txt.
+RUN set -eux; . /etc/arch_vars; \
+    curl -Lo /tmp/awscliv2.zip \
+        "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH_TAR}.zip"; \
+    curl -Lo /tmp/awscliv2.zip.sha256 \
+        "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH_TAR}.zip.sha256"; \
+    printf '%s  %s\n' "$(cut -d' ' -f1 /tmp/awscliv2.zip.sha256)" "awscliv2.zip" | \
+        sha256sum -c -; \
+    unzip -q /tmp/awscliv2.zip -d /tmp; \
+    /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli; \
+    rm -rf /tmp/awscliv2.zip /tmp/awscliv2.zip.sha256 /tmp/aws; \
+    aws --version
+
 # Create non-root dev user
 ARG USERNAME=dev
 ARG UID=1000
@@ -188,8 +297,6 @@ COPY --chown=${USERNAME}:${USERNAME} bash/.bashrc /home/${USERNAME}/.bashrc
 COPY --chown=${USERNAME}:${USERNAME} bash/.config/ /home/${USERNAME}/.config/
 COPY --chown=${USERNAME}:${USERNAME} starship/.config/starship.toml /home/${USERNAME}/.config/starship.toml
 COPY --chown=${USERNAME}:${USERNAME} .devcontainer/tmux.conf /home/${USERNAME}/.tmux.conf
-COPY --chown=${USERNAME}:${USERNAME} .devcontainer/tmux-dev-layouts.sh /home/${USERNAME}/.tmux-dev-layouts.sh
-RUN chmod +x /home/${USERNAME}/.tmux-dev-layouts.sh
 COPY --chown=${USERNAME}:${USERNAME} .devcontainer/onboard.sh /home/${USERNAME}/.onboard.sh
 RUN chmod +x /home/${USERNAME}/.onboard.sh
 COPY --chown=${USERNAME}:${USERNAME} .devcontainer/hooks/ /home/${USERNAME}/.claude/hooks/
@@ -202,12 +309,6 @@ USER ${USERNAME}
 ENV PATH="/home/${USERNAME}/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin"
 ENV FZF_DEFAULT_COMMAND="fdfind --type f"
 
-# Claude / Anthropic environment (non-secret, baked in)
-ENV CLAUDE_CODE_USE_FOUNDRY=1 \
-    ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-6 \
-    ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6 \
-    ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-6
-
 ENV MAMBA_ROOT_PREFIX="/home/${USERNAME}/micromamba"
 
 # Wire micromamba shell hook into ~/.bashrc (appends eval block)
@@ -218,6 +319,9 @@ RUN curl -fsSL https://opencode.ai/install | bash
 
 # Install Claude Code CLI (unpinned: install script does not expose a version flag)
 RUN curl -fsSL https://claude.ai/install.sh | bash
+
+# Install Entire CLI (unpinned: install script does not expose a version flag)
+RUN curl -fsSL https://entire.io/install.sh | bash
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | UV_VERSION=${UV_VERSION} sh

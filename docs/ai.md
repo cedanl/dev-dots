@@ -1,6 +1,6 @@
 # AI-workflows
 
-dev-dots is gebouwd rond AI-ondersteund ontwikkelen. Twee CLI-assistenten staan klaar: **Claude Code** (Anthropic) en **OpenCode** (OpenAI-compatible). De tmux-layouts zijn ontworpen om ze naadloos naast je editor te laten draaien.
+dev-dots is gebouwd rond AI-ondersteund ontwikkelen. Twee CLI-assistenten staan klaar: **Claude Code** (Anthropic) en **OpenCode** (OpenAI-compatible). Beide starten met `--dangerously-skip-permissions` (ingebakken als shell-alias) — binnen de devcontainer de bedoelde workflow.
 
 ---
 
@@ -12,82 +12,62 @@ Voer `onboard` uit voor een begeleide setup:
 onboard
 ```
 
-Of stel Claude Code handmatig in:
+Dit authenticeert in drie stappen:
 
-```bash
-claude-setup     # opent ~/.claude/secrets.sh in Neovim
-```
-
-Vul hier je `ANTHROPIC_FOUNDRY_API_KEY` en `ANTHROPIC_FOUNDRY_RESOURCE` in. De secrets worden automatisch geladen bij elke sessie.
+1. **gh auth login** — GitHub CLI (en stelt je git-identiteit in via `gh api user`)
+2. **opencode auth login** — GitHub Copilot in OpenCode
+3. **claude auth login** — Claude Code CLI (subscription)
 
 ---
 
 ## Claude Code
 
 ```bash
-claude           # start Claude Code in de huidige map
+claude           # start Claude Code in de huidige map (skip-permissions alias)
 ```
 
 Claude Code werkt als een autonome agent die bestanden leest, aanpast en commando's uitvoert. Geef een taak in gewone taal.
+
+Authenticatie verloopt via subscription: `claude auth login` (browser / device-code flow).
+
+> De shell-alias zet `claude` om in `claude --dangerously-skip-permissions`. Een subcommando zoals `auth login` gaat dan óók door die alias: in zeldzame gevallen kan een leading flag een subcommando overschaduwen. Gebruik `command claude auth login` om de alias expliciet te omzeilen als het login-scherm niet opent.
 
 ---
 
 ## OpenCode
 
 ```bash
-opencode         # start OpenCode in de huidige map
+opencode         # start OpenCode in de huidige map (skip-permissions alias)
 ```
 
 OpenCode werkt op dezelfde manier maar is compatible met verschillende providers. Authenticeer via:
 
 ```bash
-opencode auth
+opencode auth login
+```
+
+De globale config staat in `~/.config/opencode/opencode.json` met `permission: "allow"` — naast de skip-permissions alias.
+
+---
+
+## Entire — AI-sessies vastleggen
+
+`onboard` schakelt **Entire** in voor Claude Code direct na `claude auth login`:
+
+```bash
+entire enable --agent claude-code
+```
+
+Entire legt AI-sessies vast naast je commits op een aparte `entire/checkpoints/v1`-branch, zodat je elke wijziging terug kunt voeren naar de prompt die hem veroorzaakte.
+
+```bash
+entire status     # sessiestatus
+entire checkpoint explain   # leg uit waarom code veranderd is
+entire session resume <branch>   # hervat een eerdere sessie
 ```
 
 ---
 
-## tmux-layouts
+## Git-identiteit per user
 
-De layouts zijn de snelste manier om te werken. Ze openen Neovim, een AI en een vrije terminal in één venster.
-
-### `tdl` — standaard layout
-
-```bash
-tdl claude           # editor + Claude + terminal
-tdl opencode         # editor + OpenCode + terminal
-tdl claude opencode  # editor + Claude + OpenCode (geen losse terminal)
-```
-
-Het venster ziet er zo uit:
-
-```
-┌────────────────────┬──────────┐
-│                    │          │
-│      nvim .        │  claude  │
-│                    │          │
-├────────────────────┴──────────┤
-│         vrije terminal        │
-└───────────────────────────────┘
-```
-
-### `tdlm` — multi-project layout
-
-```bash
-tdlm claude
-```
-
-Voer dit uit in een map met meerdere submappen. Voor elke submap komt er een tmux-venster met een volledige `tdl`-layout. Handig voor monorepo's of wanneer je meerdere services tegelijk wilt bijwerken.
-
-### `tsl` — parallelle zwerm
-
-```bash
-tsl 4 claude         # vier Claude-sessies naast elkaar
-tsl 3 opencode       # drie OpenCode-sessies
-```
-
-Alle panelen starten hetzelfde commando, elk in de huidige map. Gebruik dit om taken parallel te laten draaien — bijvoorbeeld dezelfde prompt op meerdere subdirectories loslaten.
-
----
-
-!!! warning "tmux vereist"
-    `tdl`, `tdlm` en `tsl` werken alleen binnen een tmux-sessie. Start `tmux` voordat je ze aanroept.
+`onboard` leidt na `gh auth login` je git-identiteit af (`user.name` / `user.email`) en zet `user.useConfigOnly true`. Commits zonder ingestelde identiteit falen met een duidelijke fout — zo wordt misattributie tussen collega's voorkomen.
