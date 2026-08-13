@@ -258,18 +258,14 @@ RUN set -eux; . /etc/arch_vars; \
     flux --version
 
 # Install AWS CLI v2. The official installer only ships "latest", so we cannot
-# pin a version at build time; the released checksum verifies integrity of the
-# download. Track the actual version via post-create's tool-versions.txt.
+# pin a version at build time (AWS publishes PGP .sig files, not sha256 sums).
+# Track the actual version via post-create's tool-versions.txt.
 RUN set -eux; . /etc/arch_vars; \
     curl -Lo /tmp/awscliv2.zip \
         "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH_TAR}.zip"; \
-    curl -Lo /tmp/awscliv2.zip.sha256 \
-        "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH_TAR}.zip.sha256"; \
-    printf '%s  %s\n' "$(cut -d' ' -f1 /tmp/awscliv2.zip.sha256)" "awscliv2.zip" | \
-        sha256sum -c -; \
     unzip -q /tmp/awscliv2.zip -d /tmp; \
     /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli; \
-    rm -rf /tmp/awscliv2.zip /tmp/awscliv2.zip.sha256 /tmp/aws; \
+    rm -rf /tmp/awscliv2.zip /tmp/aws; \
     aws --version
 
 # Create non-root dev user
