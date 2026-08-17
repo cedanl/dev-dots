@@ -299,6 +299,12 @@ print_summary() {
   else
     _pending "claude not authenticated — run: claude auth login"
   fi
+
+  if command -v entire &>/dev/null && git rev-parse --is-inside-work-tree &>/dev/null && entire status &>/dev/null 2>&1; then
+    _done "entire enabled (checkpoints → cedanl/entire-checkpoints)"
+  else
+    _pending "entire not enabled — will auto-enable on first: claude"
+  fi
 }
 
 # ── main ──────────────────────────────────────────────────────────────────────
