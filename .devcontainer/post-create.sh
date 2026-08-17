@@ -106,38 +106,8 @@ if [ -d "$REPO_HOOKS_DIR" ]; then
   echo "[OK] Hooks installed to $CLAUDE_HOOKS_DIR"
 fi
 
-# Container-wide settings to merge (hook + common permissions)
-CONTAINER_SETTINGS=$(cat <<'JSONEOF'
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Read|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/block-env-read.sh"
-          }
-        ]
-      }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(gh repo:*)",
-      "Bash(git clone:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git log *)",
-      "Bash(gh api *)",
-      "Bash(gh auth *)",
-      "Skill(update-config)"
-    ]
-  }
-}
-JSONEOF
-)
+# Container-wide settings — use the repo's .claude/settings.json as the source of truth
+CONTAINER_SETTINGS=$(cat "/workspaces/dev-dots/dev-dots/.claude/settings.json")
 
 # Merge into existing settings (preserves user preferences like model/theme)
 if [ -f "$CLAUDE_SETTINGS" ]; then
@@ -145,7 +115,8 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
     $existing + {
       hooks: (($existing.hooks // {}) + $new.hooks),
       permissions: {
-        allow: (($existing.permissions.allow // []) + ($new.permissions.allow // []) | unique)
+        allow: (($existing.permissions.allow // []) + ($new.permissions.allow // []) | unique),
+        deny:  (($existing.permissions.deny  // []) + ($new.permissions.deny  // []) | unique)
       }
     }
   ')

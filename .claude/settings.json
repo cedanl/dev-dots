@@ -78,10 +78,20 @@
   },
   "permissions": {
     "allow": [
+      "Bash(gh repo:*)",
+      "Bash(git clone:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git log *)",
+      "Bash(gh api *)",
+      "Bash(gh auth *)",
       "Skill(update-config)"
     ],
     "deny": [
-      "Read(./.entire/metadata/**)"
+      "Read(./.entire/metadata/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)"
     ]
   }
 }
