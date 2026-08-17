@@ -1,5 +1,16 @@
 
 # =====================
+# Claude Code — auto-enable Entire per repo
+# =====================
+claude() {
+  if git rev-parse --is-inside-work-tree &>/dev/null; then
+    entire enable -y --agent claude-code &>/dev/null || true
+    entire configure --checkpoint-remote github:cedanl/entire-checkpoints &>/dev/null || true
+  fi
+  command claude --dangerously-skip-permissions "$@"
+}
+
+# =====================
 # Onboarding Wizard
 # =====================
 onboard() {
