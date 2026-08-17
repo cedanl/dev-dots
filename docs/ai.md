@@ -1,6 +1,6 @@
 # AI-workflows
 
-dev-dots is gebouwd rond AI-ondersteund ontwikkelen. Twee CLI-assistenten staan klaar: **Claude Code** (Anthropic) en **OpenCode** (OpenAI-compatible). Beide starten met `--dangerously-skip-permissions` (ingebakken als shell-alias) — binnen de devcontainer de bedoelde workflow.
+dev-dots is gebouwd rond AI-ondersteund ontwikkelen. Twee CLI-assistenten staan klaar: **Claude Code** (Anthropic) en **OpenCode** (OpenAI-compatible). Beide starten met `--dangerously-skip-permissions` — binnen de devcontainer de bedoelde workflow. Claude Code is daarnaast uitgebreid met automatische Entire-integratie voor sessie-opslag.
 
 ---
 
@@ -52,18 +52,23 @@ De globale config staat in `~/.config/opencode/opencode.json` met `permission: "
 
 ## Entire — AI-sessies vastleggen
 
-`onboard` schakelt **Entire** in voor Claude Code direct na `claude auth login`:
+Entire legt AI-sessies (prompts, tool calls, file changes, transcripts) vast naast je commits, zodat je elke wijziging kunt herleiden naar de prompt die hem veroorzaakte.
+
+**Automatische activatie:** de `claude`-functie detecteert of je in een `cedanl/`-repo zit en schakelt Entire automatisch in bij de eerste aanroep — je hoeft niks handmatig te doen.
 
 ```bash
-entire enable --agent claude-code
+claude   # activeert entire automatisch als origin cedanl/ is
 ```
 
-Entire legt AI-sessies vast naast je commits op een aparte `entire/checkpoints/v1`-branch, zodat je elke wijziging terug kunt voeren naar de prompt die hem veroorzaakte.
+Alle checkpoints worden gesynchroniseerd naar de centrale private repo **`cedanl/entire-checkpoints`** bij elke `git push`. Alleen repos met `cedanl/` als origin participeren — persoonlijke repos en andere organisaties worden overgeslagen.
 
 ```bash
-entire status     # sessiestatus
-entire checkpoint explain   # leg uit waarom code veranderd is
-entire session resume <branch>   # hervat een eerdere sessie
+entire status                      # toon huidige configuratie
+entire checkpoint list             # bekijk alle checkpoints in deze repo
+entire checkpoint explain          # leg uit waarom code veranderd is
+entire why <bestand>               # welke prompt heeft deze regel veroorzaakt?
+entire session resume <branch>     # hervat een eerdere sessie
+entire dispatch                    # markdown samenvatting van recent AI-werk
 ```
 
 ---
