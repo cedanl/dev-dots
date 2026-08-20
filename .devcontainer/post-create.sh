@@ -126,6 +126,30 @@ else
 fi
 echo "[OK] Container-wide settings merged into $CLAUDE_SETTINGS"
 
+# ── Global instructions (Claude Code + OpenCode) ─────────────────────────────
+# global_claude.md is the single source of truth for container-wide agent
+# instructions. Both tools STACK these on top of any project-local CLAUDE.md /
+# AGENTS.md — global rules apply everywhere, project rules take precedence.
+#   - Claude Code reads $HOME/.claude/CLAUDE.md as global user memory.
+#   - OpenCode reads $HOME/.config/opencode/AGENTS.md as global instructions.
+echo ""
+echo "================================================================================"
+echo "INSTALLING GLOBAL AGENT INSTRUCTIONS"
+echo "================================================================================"
+
+GLOBAL_INSTRUCTIONS="/workspaces/dev-dots/global_claude.md"
+OPENCODE_DIR="$HOME/.config/opencode"
+
+if [ -f "$GLOBAL_INSTRUCTIONS" ]; then
+	cp "$GLOBAL_INSTRUCTIONS" "$CLAUDE_DIR/CLAUDE.md"
+	echo "[OK] Global instructions -> $CLAUDE_DIR/CLAUDE.md"
+	mkdir -p "$OPENCODE_DIR"
+	cp "$GLOBAL_INSTRUCTIONS" "$OPENCODE_DIR/AGENTS.md"
+	echo "[OK] Global instructions -> $OPENCODE_DIR/AGENTS.md"
+else
+	echo "[SKIPPED] $GLOBAL_INSTRUCTIONS not found"
+fi
+
 # ── Load Claude/OpenCode skills ──────────────────────────────────────────────
 echo ""
 echo "================================================================================"
