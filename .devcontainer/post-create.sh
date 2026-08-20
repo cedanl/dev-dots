@@ -13,7 +13,7 @@ echo "==========================================================================
 echo "CLIs AVAILABLE"
 echo "================================================================================"
 for cli in nvim opencode claude uv starship zoxide node npm csvlens micromamba az azcopy azd kubectl helm flux glab aws entire; do
-  which "$cli" 2>/dev/null && echo "[OK]     $cli: $(which $cli)" || echo "[MISSING] $cli"
+	which "$cli" 2>/dev/null && echo "[OK]     $cli: $(which $cli)" || echo "[MISSING] $cli"
 done
 
 # Print git tooling summary
@@ -22,7 +22,7 @@ echo "==========================================================================
 echo "GIT TOOLING AVAILABLE"
 echo "================================================================================"
 for cli in git lazygit gh delta; do
-  which "$cli" >/dev/null 2>&1 && echo "[OK]     $cli: $(which $cli)" || echo "[MISSING] $cli"
+	which "$cli" >/dev/null 2>&1 && echo "[OK]     $cli: $(which $cli)" || echo "[MISSING] $cli"
 done
 
 # Collect all installed tool versions and write to tool-versions.txt
@@ -33,40 +33,40 @@ echo "==========================================================================
 echo "COLLECTING TOOL VERSIONS"
 echo "================================================================================"
 {
-  echo "# Tool versions captured at devcontainer post-create"
-  echo "# Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-  echo ""
+	echo "# Tool versions captured at devcontainer post-create"
+	echo "# Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+	echo ""
 
-  # --- Section 1: all dpkg/apt-managed system packages ---
-  echo "## System packages (dpkg)"
-  dpkg-query -W -f='  ${Package}: ${Version}\n' 2>/dev/null | sort
-  echo ""
+	# --- Section 1: all dpkg/apt-managed system packages ---
+	echo "## System packages (dpkg)"
+	dpkg-query -W -f='  ${Package}: ${Version}\n' 2>/dev/null | sort
+	echo ""
 
-  # --- Section 2: executables found in non-system PATH dirs ---
-  # Standard system dirs (/usr/bin, /bin, /sbin, /usr/sbin) are already
-  # fully covered by dpkg above; scanning them again would be redundant and slow.
-  # This section only probes user/local dirs (e.g. /usr/local/bin, ~/.local/bin)
-  # where manually-installed tools live.
-  # Uses `timeout 2` per binary to avoid hangs; tries --version then -V.
-  echo "## PATH executables (non-system)"
-  declare -A _seen
-  while IFS= read -r _dir; do
-    [ -d "$_dir" ] || continue
-    # Skip standard system directories already covered by dpkg
-    case "$_dir" in /usr/bin|/bin|/sbin|/usr/sbin) continue ;; esac
-    for _bin in "$_dir"/*; do
-      [ -x "$_bin" ] && [ -f "$_bin" ] || continue
-      _name=$(basename "$_bin")
-      [ "${_seen[$_name]+_}" ] && continue   # skip duplicates across PATH dirs
-      _seen["$_name"]=1
-      _ver=$(timeout 2 "$_bin" --version 2>&1 | grep -m1 '.' 2>/dev/null || true)
-      [ -z "$_ver" ] && _ver=$(timeout 2 "$_bin" -V 2>&1 | grep -m1 '.' 2>/dev/null || true)
-      [ -z "$_ver" ] && _ver="(version unknown)"
-      echo "  $_name: $_ver"
-    done
-  done < <(echo "$PATH" | tr ':' '\n' | awk '!seen[$0]++') | sort
+	# --- Section 2: executables found in non-system PATH dirs ---
+	# Standard system dirs (/usr/bin, /bin, /sbin, /usr/sbin) are already
+	# fully covered by dpkg above; scanning them again would be redundant and slow.
+	# This section only probes user/local dirs (e.g. /usr/local/bin, ~/.local/bin)
+	# where manually-installed tools live.
+	# Uses `timeout 2` per binary to avoid hangs; tries --version then -V.
+	echo "## PATH executables (non-system)"
+	declare -A _seen
+	while IFS= read -r _dir; do
+		[ -d "$_dir" ] || continue
+		# Skip standard system directories already covered by dpkg
+		case "$_dir" in /usr/bin | /bin | /sbin | /usr/sbin) continue ;; esac
+		for _bin in "$_dir"/*; do
+			[ -x "$_bin" ] && [ -f "$_bin" ] || continue
+			_name=$(basename "$_bin")
+			[ "${_seen[$_name]+_}" ] && continue # skip duplicates across PATH dirs
+			_seen["$_name"]=1
+			_ver=$(timeout 2 "$_bin" --version 2>&1 | grep -m1 '.' 2>/dev/null || true)
+			[ -z "$_ver" ] && _ver=$(timeout 2 "$_bin" -V 2>&1 | grep -m1 '.' 2>/dev/null || true)
+			[ -z "$_ver" ] && _ver="(version unknown)"
+			echo "  $_name: $_ver"
+		done
+	done < <(echo "$PATH" | tr ':' '\n' | awk '!seen[$0]++') | sort
 
-} > "$TOOL_VERSIONS_FILE"
+} >"$TOOL_VERSIONS_FILE"
 
 echo "Written to: $TOOL_VERSIONS_FILE"
 echo ""
@@ -101,17 +101,17 @@ mkdir -p "$CLAUDE_HOOKS_DIR"
 
 # Install hook scripts
 if [ -d "$REPO_HOOKS_DIR" ]; then
-  cp "$REPO_HOOKS_DIR"/*.sh "$CLAUDE_HOOKS_DIR/" 2>/dev/null && \
-    chmod +x "$CLAUDE_HOOKS_DIR"/*.sh
-  echo "[OK] Hooks installed to $CLAUDE_HOOKS_DIR"
+	cp "$REPO_HOOKS_DIR"/*.sh "$CLAUDE_HOOKS_DIR/" 2>/dev/null &&
+		chmod +x "$CLAUDE_HOOKS_DIR"/*.sh
+	echo "[OK] Hooks installed to $CLAUDE_HOOKS_DIR"
 fi
 
 # Container-wide settings — use the repo's .claude/settings.json as the source of truth
-CONTAINER_SETTINGS=$(cat "/workspaces/dev-dots/dev-dots/.claude/settings.json")
+CONTAINER_SETTINGS=$(cat "/workspaces/dev-dots/.claude/settings.json")
 
 # Merge into existing settings (preserves user preferences like model/theme)
 if [ -f "$CLAUDE_SETTINGS" ]; then
-  MERGED=$(jq -n --argjson existing "$(cat "$CLAUDE_SETTINGS")" --argjson new "$CONTAINER_SETTINGS" '
+	MERGED=$(jq -n --argjson existing "$(cat "$CLAUDE_SETTINGS")" --argjson new "$CONTAINER_SETTINGS" '
     $existing + {
       hooks: (($existing.hooks // {}) + $new.hooks),
       permissions: {
@@ -120,9 +120,9 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
       }
     }
   ')
-  echo "$MERGED" > "$CLAUDE_SETTINGS"
+	echo "$MERGED" >"$CLAUDE_SETTINGS"
 else
-  echo "$CONTAINER_SETTINGS" > "$CLAUDE_SETTINGS"
+	echo "$CONTAINER_SETTINGS" >"$CLAUDE_SETTINGS"
 fi
 echo "[OK] Container-wide settings merged into $CLAUDE_SETTINGS"
 
@@ -132,9 +132,9 @@ echo "==========================================================================
 echo "LOADING CLAUDE SKILLS"
 echo "================================================================================"
 
-npx --yes skills add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g 2>/dev/null && \
-  echo "[OK] Skills loaded from cedanl/.github" || \
-  echo "[SKIPPED] Skills install (npx may not be available yet)"
+npx --yes skills add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g 2>/dev/null &&
+	echo "[OK] Skills loaded from cedanl/.github" ||
+	echo "[SKIPPED] Skills install (npx may not be available yet)"
 
 echo ""
 echo "================================================================================"
