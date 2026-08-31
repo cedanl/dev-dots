@@ -126,6 +126,27 @@ else
 fi
 echo "[OK] Container-wide settings merged into $CLAUDE_SETTINGS"
 
+# ── Global agent instructions ────────────────────────────────────────────────
+echo ""
+echo "================================================================================"
+echo "INSTALLING GLOBAL AGENT INSTRUCTIONS"
+echo "================================================================================"
+
+GLOBAL_INSTRUCTIONS="/workspaces/dev-dots/global_claude.md"
+CLAUDE_GLOBAL="$CLAUDE_DIR/CLAUDE.md"
+OPENCODE_GLOBAL="$HOME/.config/opencode/AGENTS.md"
+
+if [ -f "$GLOBAL_INSTRUCTIONS" ]; then
+	mkdir -p "$(dirname "$CLAUDE_GLOBAL")"
+	mkdir -p "$(dirname "$OPENCODE_GLOBAL")"
+	cp "$GLOBAL_INSTRUCTIONS" "$CLAUDE_GLOBAL"
+	cp "$GLOBAL_INSTRUCTIONS" "$OPENCODE_GLOBAL"
+	echo "[OK] Global instructions -> $CLAUDE_GLOBAL"
+	echo "[OK] Global instructions -> $OPENCODE_GLOBAL"
+else
+	echo "[SKIPPED] $GLOBAL_INSTRUCTIONS not found"
+fi
+
 # ── Load Claude/OpenCode skills ──────────────────────────────────────────────
 echo ""
 echo "================================================================================"
