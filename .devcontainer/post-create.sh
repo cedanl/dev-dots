@@ -164,9 +164,12 @@ echo "==========================================================================
 echo "LOADING CLAUDE SKILLS"
 echo "================================================================================"
 
-npx --yes skills add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g 2>/dev/null &&
-	echo "[OK] Skills loaded from cedanl/.github" ||
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if bash "$SCRIPT_DIR/install-skills.sh"; then
+	echo "[OK] Skills loaded from cedanl/.github"
+else
 	echo "[SKIPPED] Skills install (npx may not be available yet)"
+fi
 
 echo ""
 echo "================================================================================"
