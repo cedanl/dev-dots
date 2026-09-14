@@ -132,17 +132,28 @@ echo "==========================================================================
 echo "INSTALLING GLOBAL AGENT INSTRUCTIONS"
 echo "================================================================================"
 
-GLOBAL_INSTRUCTIONS="/workspaces/dev-dots/global_claude.md"
+# Resolve the source relative to this script instead of a hardcoded workspace
+# path, so the block still works when the container mounts elsewhere.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GLOBAL_INSTRUCTIONS="$(dirname "$SCRIPT_DIR")/global_claude.md"
 CLAUDE_GLOBAL="$CLAUDE_DIR/CLAUDE.md"
 OPENCODE_GLOBAL="$HOME/.config/opencode/AGENTS.md"
 
 if [ -f "$GLOBAL_INSTRUCTIONS" ]; then
-	mkdir -p "$(dirname "$CLAUDE_GLOBAL")"
-	mkdir -p "$(dirname "$OPENCODE_GLOBAL")"
-	cp "$GLOBAL_INSTRUCTIONS" "$CLAUDE_GLOBAL"
-	cp "$GLOBAL_INSTRUCTIONS" "$OPENCODE_GLOBAL"
-	echo "[OK] Global instructions -> $CLAUDE_GLOBAL"
-	echo "[OK] Global instructions -> $OPENCODE_GLOBAL"
+	mkdir -p "$(dirname "$CLAUDE_GLOBAL")" 2>/dev/null || echo "[WARN] Cannot create $(dirname "$CLAUDE_GLOBAL")"
+	mkdir -p "$(dirname "$OPENCODE_GLOBAL")" 2>/dev/null || echo "[WARN] Cannot create $(dirname "$OPENCODE_GLOBAL")"
+	# Best-effort under set -euo pipefail: a failed copy is reported instead of
+	# aborting post-create (which would silently skip skills + completion).
+	# Existing user globals are preserved as *.prev before the repo copy takes
+	# over, so personal config is never silently destroyed on rebuild.
+	for target in "$CLAUDE_GLOBAL" "$OPENCODE_GLOBAL"; do
+		if [ -f "$target" ]; then
+			cp "$target" "$target.prev" 2>/dev/null && echo "[OK] Backed up existing -> $target.prev"
+		fi
+		cp "$GLOBAL_INSTRUCTIONS" "$target" 2>/dev/null &&
+			echo "[OK] Global instructions -> $target" ||
+			echo "[WARN] Failed to install -> $target"
+	done
 else
 	echo "[SKIPPED] $GLOBAL_INSTRUCTIONS not found"
 fi
