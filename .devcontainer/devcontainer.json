@@ -3,6 +3,12 @@
   "image": "ghcr.io/cedanl/dev-dots:latest",
   "init": true,
   "remoteUser": "dev",
+  "mounts": [
+    "source=devdots-claude,target=/home/dev/.claude,type=volume",
+    "source=devdots-gh,target=/home/dev/.config/gh,type=volume",
+    "source=devdots-opencode,target=/home/dev/.config/opencode,type=volume",
+    "source=devdots-history,target=/home/dev/.history,type=volume"
+  ],
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
   "forwardPorts": [8000, 3030],
