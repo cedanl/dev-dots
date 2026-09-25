@@ -1,7 +1,10 @@
 {
   "name": "dev",
-  "image": "ghcr.io/cedanl/dev-dots:latest",
+  "image": "ghcr.io/cedanl/dev-dots:1",
   "remoteUser": "dev",
+  "remoteEnv": {
+    "DISABLE_AUTOUPDATER": "1"
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
   "forwardPorts": [8000, 3030],
