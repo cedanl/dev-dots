@@ -5,16 +5,14 @@ on:
     branches: [main]
     tags: ['v*']
     paths:
-      - '.devcontainer/Dockerfile'
-      - '.devcontainer/devcontainer.json'
+      - '.devcontainer/**'
       - 'bash/**'
       - 'starship/**'
       - '.github/workflows/build.yml'
   pull_request:
     branches: [main]
     paths:
-      - '.devcontainer/Dockerfile'
-      - '.devcontainer/devcontainer.json'
+      - '.devcontainer/**'
       - 'bash/**'
       - 'starship/**'
       - '.github/workflows/build.yml'
