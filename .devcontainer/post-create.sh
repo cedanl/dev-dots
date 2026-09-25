@@ -82,6 +82,11 @@ echo "  (Step 1: gh auth login)"
 echo "  (Step 2: opencode auth login)"
 echo "  (Step 3: claude auth login)"
 
+# ── Resolve repo directory relative to this script ──────────────────────────────
+# Allows post-create to work regardless of workspace name or mount path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # ── Git identity guard ─────────────────────────────────────────────────────────
 # Refuse to guess an identity; each user sets name/email via 'onboard'.
 git config --global user.useConfigOnly true
@@ -95,7 +100,7 @@ echo "==========================================================================
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_SETTINGS="$CLAUDE_DIR/settings.json"
 CLAUDE_HOOKS_DIR="$CLAUDE_DIR/hooks"
-REPO_HOOKS_DIR="/workspaces/dev-dots/.devcontainer/hooks"
+REPO_HOOKS_DIR="$SCRIPT_DIR/hooks"
 
 mkdir -p "$CLAUDE_HOOKS_DIR"
 
@@ -107,7 +112,7 @@ if [ -d "$REPO_HOOKS_DIR" ]; then
 fi
 
 # Container-wide settings — use the repo's .claude/settings.json as the source of truth
-CONTAINER_SETTINGS=$(cat "/workspaces/dev-dots/.claude/settings.json")
+CONTAINER_SETTINGS=$(cat "$REPO_ROOT/.claude/settings.json")
 
 # Merge into existing settings (preserves user preferences like model/theme)
 if [ -f "$CLAUDE_SETTINGS" ]; then
@@ -132,10 +137,7 @@ echo "==========================================================================
 echo "INSTALLING GLOBAL AGENT INSTRUCTIONS"
 echo "================================================================================"
 
-# Resolve the source relative to this script instead of a hardcoded workspace
-# path, so the block still works when the container mounts elsewhere.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GLOBAL_INSTRUCTIONS="$(dirname "$SCRIPT_DIR")/global_claude.md"
+GLOBAL_INSTRUCTIONS="$REPO_ROOT/global_claude.md"
 CLAUDE_GLOBAL="$CLAUDE_DIR/CLAUDE.md"
 OPENCODE_GLOBAL="$HOME/.config/opencode/AGENTS.md"
 
@@ -164,7 +166,6 @@ echo "==========================================================================
 echo "LOADING CLAUDE SKILLS"
 echo "================================================================================"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if bash "$SCRIPT_DIR/install-skills.sh"; then
 	echo "[OK] Skills loaded from cedanl/.github"
 else
