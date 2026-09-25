@@ -72,6 +72,12 @@ echo "Written to: $TOOL_VERSIONS_FILE"
 echo ""
 
 echo "================================================================================"
+echo "INITIALIZING NETWORK SECURITY"
+echo "================================================================================"
+bash "$SCRIPT_DIR/init-firewall.sh" || echo "[WARN] Firewall initialization skipped (non-root or not supported)"
+
+echo ""
+echo "================================================================================"
 echo "TIPS & NEXT STEPS"
 echo "================================================================================"
 echo "Run 'az login' to authenticate with Azure (enables az, azcopy, azd)"
