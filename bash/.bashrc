@@ -19,8 +19,9 @@ HISTCONTROL=ignoreboth
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=1000
-HISTFILESIZE=2000
+export HISTFILE="$HOME/.history"
+export HISTSIZE=10000
+export HISTFILESIZE=10000
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -126,5 +127,4 @@ eval "$(starship init bash)"
 # uv shell completion
 eval "$(uv generate-shell-completion bash)"
 
-export PATH="$HOME/.devcontainers/bin:$PATH"
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin:$PATH"

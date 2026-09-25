@@ -1,6 +1,7 @@
 {
   "name": "dev",
   "image": "ghcr.io/cedanl/dev-dots:latest",
+  "init": true,
   "remoteUser": "dev",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
