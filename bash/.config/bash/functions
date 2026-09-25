@@ -1,14 +1,28 @@
 
 # =====================
-# Claude Code — auto-enable Entire per repo
+# Claude Code — Entire session tracking (explicit consent only)
 # =====================
+# COMPLIANCE NOTE: Entire CLI saves session transcripts (prompts, tool output, responses)
+# to cedanl/entire-checkpoints. This includes potentially sensitive data (API keys,
+# usernames, code snippets). Opt-in is required per GDPR/privacy regulations.
 claude() {
+  # Only suggest Entire for cedanl/ repos (internal team)
   if git rev-parse --is-inside-work-tree &>/dev/null; then
     local origin
     origin=$(git remote get-url origin 2>/dev/null || true)
     if echo "$origin" | grep -q "cedanl/"; then
-      entire enable -y --agent claude-code &>/dev/null || true
-      entire configure --checkpoint-remote github:cedanl/entire-checkpoints &>/dev/null || true
+      # Check if Entire is available and not yet enabled
+      if command -v entire &>/dev/null && ! entire status --agent claude-code &>/dev/null 2>&1; then
+        printf '\n%s\n%s\n%s\n%s\n' \
+          "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" \
+          "NOTICE: Entire session tracking (opt-in)" \
+          "Session transcripts (prompts, outputs, responses) are saved to:" \
+          "  github:cedanl/entire-checkpoints" >&2
+        printf '%s\n%s\n%s\n' \
+          "To enable (explicit consent required): entire enable --agent claude-code" \
+          "To configure checkpoint remote: entire configure --checkpoint-remote github:cedanl/entire-checkpoints" \
+          "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+      fi
     fi
   fi
   command claude --dangerously-skip-permissions "$@"
