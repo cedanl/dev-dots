@@ -1,0 +1,32 @@
+{
+  "name": "dev (egress-firewall)",
+  "image": "ghcr.io/cedanl/dev-dots:latest",
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "remoteUser": "dev",
+  "init": true,
+  "mounts": [
+    "source=devdots-claude,target=/home/dev/.claude,type=volume",
+    "source=devdots-gh,target=/home/dev/.config/gh,type=volume",
+    "source=devdots-glab,target=/home/dev/.config/glab-cli,type=volume",
+    "source=devdots-opencode,target=/home/dev/.local/share/opencode,type=volume",
+    "source=devdots-history,target=/home/dev/.local/state/bash,type=volume"
+  ],
+  "containerEnv": {
+    "DEVDOTS_FIREWALL_EXTRA": "${localEnv:DEVDOTS_FIREWALL_EXTRA}"
+  },
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/dev/.claude",
+    "DISABLE_AUTOUPDATER": "1"
+  },
+  "postStartCommand": "sudo /usr/local/sbin/init-firewall.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "bash .devcontainer/post-attach.sh",
+  "forwardPorts": [
+    8000,
+    3030
+  ],
+  "customizations": {}
+}
