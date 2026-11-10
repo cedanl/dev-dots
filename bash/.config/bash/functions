@@ -1,15 +1,25 @@
 # =====================
+# Entire - auto-enable per CEDA repo
+# =====================
+# CEDA-repo's: de GitHub-org cedanl en de GitLab-groep surf-internal/npuls/ceda (herkenning aan de origin-URL).
+# Checkpoints gaan voor beide naar dezelfde privé GitHub-repo: Entire kent als checkpoint-remote alleen `github`.
+_entire_auto_enable() {
+  local agent="$1" origin
+  git rev-parse --is-inside-work-tree &>/dev/null || return 0
+  origin=$(git remote get-url origin 2>/dev/null || true)
+  case "$origin" in
+    *cedanl/* | *surf-internal/npuls/ceda/*)
+      entire enable -y --agent "$agent" &>/dev/null || true
+      entire configure --checkpoint-remote github:cedanl/entire-checkpoints &>/dev/null || true
+      ;;
+  esac
+}
+
+# =====================
 # Claude Code - auto-enable Entire per repo
 # =====================
 claude() {
-  if git rev-parse --is-inside-work-tree &>/dev/null; then
-    local origin
-    origin=$(git remote get-url origin 2>/dev/null || true)
-    if echo "$origin" | grep -q "cedanl/"; then
-      entire enable -y --agent claude-code &>/dev/null || true
-      entire configure --checkpoint-remote github:cedanl/entire-checkpoints &>/dev/null || true
-    fi
-  fi
+  _entire_auto_enable claude-code
   command claude --dangerously-skip-permissions "$@"
 }
 
@@ -17,14 +27,7 @@ claude() {
 # OpenCode - auto-enable Entire per repo
 # =====================
 opencode() {
-  if git rev-parse --is-inside-work-tree &>/dev/null; then
-    local origin
-    origin=$(git remote get-url origin 2>/dev/null || true)
-    if echo "$origin" | grep -q "cedanl/"; then
-      entire enable -y --agent opencode &>/dev/null || true
-      entire configure --checkpoint-remote github:cedanl/entire-checkpoints &>/dev/null || true
-    fi
-  fi
+  _entire_auto_enable opencode
   command opencode --dangerously-skip-permissions "$@"
 }
 
