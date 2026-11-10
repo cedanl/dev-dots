@@ -107,4 +107,6 @@ ffmpeg -framerate 24 -pattern_type glob -i 'frames/frame_*.png' \
 
 Gepubliceerd op `ghcr.io/cedanl/dev-dots:latest` — gebouwd voor `amd64` en `arm64`.
 
+`devcontainer.json` pint op `major.minor` (nu `:1.2`), zodat iedereen dezelfde versie krijgt. Een release (`vX.Y.Z`) levert de tags `X.Y.Z` en `X.Y`; verhoog de pin in `devcontainer.json` na een nieuwe release.
+
 > Uitgebreide documentatie en sneltoetsen: zie de [projectdocumentatie](https://cedanl.github.io/dev-dots).

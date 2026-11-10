@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "image": "ghcr.io/cedanl/dev-dots:latest",
+  "image": "ghcr.io/cedanl/dev-dots:1.2",
   "remoteUser": "dev",
   "init": true,
   "mounts": [
