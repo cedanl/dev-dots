@@ -62,6 +62,9 @@ claude   # activeert entire automatisch als origin cedanl/ of surf-internal/npul
 
 Alle checkpoints worden gesynchroniseerd naar de centrale private repo **`cedanl/entire-checkpoints`** bij elke `git push`. Entire kent als checkpoint-remote alleen GitHub, dus ook de sessies van GitLab-repo's gaan daarheen. Persoonlijke repos en andere organisaties of groepen worden overgeslagen.
 
+!!! warning "Privacy: wat wordt bewaard"
+    Een sessie bevat je prompts, tool-output en de antwoorden, en kan dus geheimen of persoonsgegevens bevatten. Bij de eerste keer per repo toont `claude` daarom een melding. Uitzetten kan per repo met `git config devdots.entire false`, of voor alle repo's met `export DEVDOTS_ENTIRE=0`. Dan blijft `claude` gewoon werken, zonder Entire.
+
 **Hooks blijven lokaal:** `entire enable` schrijft zijn hooks in `.claude/settings.json`, een bestand dat repo's vaak in git hebben. `bash/.config/bash/entire-local-hooks.py` zet ze daarom in `.claude/settings.local.json` en herstelt `settings.json`; `.entire/` en het lokale bestand gaan in `.git/info/exclude`. Zo blijft `git status` schoon en komen de hooks niet in een (publieke) spiegel. Is `settings.json` niet in git, dan blijft alles zoals Entire het schrijft.
 
 ```bash
