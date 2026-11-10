@@ -8,4 +8,10 @@ set -euo pipefail
 # Runs silently; the exit status tells the caller whether the install
 # succeeded so each caller can pick its own messaging.
 
-npx --yes skills add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g >/dev/null 2>&1
+# Pinned CLI version (supply chain): `npx --yes skills` would run whatever is latest on npm.
+# The skills *content* still follows cedanl/.github HEAD on purpose (post-attach auto-refreshes);
+# that repo has no tags/releases to pin to.
+# renovate: datasource=npm depName=skills
+SKILLS_VERSION="1.7.6"
+
+npx --yes "skills@${SKILLS_VERSION}" add cedanl/.github --skill '*' -a claude-code -a opencode -a pi -y --copy -g >/dev/null 2>&1

@@ -35,6 +35,8 @@ ARG FLUX_VERSION="2.4.0"
 ARG KUBECTL_VERSION="1.31.14"
 # renovate: datasource=github-releases depName=helm/helm extractVersion=^v(?<version>.+)$
 ARG HELM_VERSION="3.16.0"
+# renovate: datasource=node-version depName=node
+ARG NODE_VERSION="24.22.2"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Resolve build architecture once; all subsequent RUN steps source /etc/arch_vars.
@@ -49,6 +51,9 @@ RUN case "${TARGETARCH:-amd64}" in \
     esac && \
     printf 'ARCH_DEB=%s\nARCH_TAR=%s\nARCH_NVIM=%s\nARCH_MAMBA=%s\n' \
       "$ARCH_DEB" "$ARCH_TAR" "$ARCH_NVIM" "$ARCH_MAMBA" > /etc/arch_vars
+
+# Checksum helpers (sha_in_list / sha_single / verify_sha256), sourced next to /etc/arch_vars
+COPY .devcontainer/verify.sh /usr/local/lib/verify.sh
 
 # Install all system dependencies first (including gnupg for eza/qsv repos)
 RUN apt-get update && \
@@ -72,10 +77,17 @@ RUN apt-get update && \
         ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Node.js LTS (for npm/Slidev and other Node-based tools)
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs && \
-    rm -rf /var/lib/apt/lists/*
+# Install Node.js (pinned LTS, for npm/Slidev and other Node-based tools).
+# Official tarball verified against the SHASUMS256.txt of the same release; replaces the
+# unpinned `curl | bash` NodeSource setup script.
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    NODE_ARCH=$([ "$ARCH_DEB" = "arm64" ] && echo arm64 || echo x64); \
+    NODE_TARBALL="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz"; \
+    curl -fsSLo /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TARBALL}"; \
+    verify_sha256 /tmp/node.tar.xz "$(sha_in_list "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" "$NODE_TARBALL")"; \
+    tar -C /usr/local --strip-components=1 --no-same-owner -xJf /tmp/node.tar.xz; \
+    rm -f /tmp/node.tar.xz /usr/local/CHANGELOG.md /usr/local/LICENSE /usr/local/README.md; \
+    node --version; npm --version
 
 # Install GitHub CLI (gh)
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -98,9 +110,10 @@ RUN mkdir -p /etc/apt/keyrings && \
     rm /etc/apt/sources.list.d/azure-cli.list /etc/apt/keyrings/microsoft.gpg
 
 # Install lazygit
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/lazygit.tar.gz \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/lazygit.tar.gz \
         "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${ARCH_NVIM}.tar.gz"; \
+    verify_sha256 /tmp/lazygit.tar.gz "$(sha_in_list "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/checksums.txt" "lazygit_${LAZYGIT_VERSION}_linux_${ARCH_NVIM}.tar.gz")"; \
     tar -C /tmp -xzf /tmp/lazygit.tar.gz lazygit; \
     mv /tmp/lazygit /usr/local/bin/lazygit; \
     rm /tmp/lazygit.tar.gz; \
@@ -132,15 +145,17 @@ RUN git config --system init.defaultBranch main && \
 
 # Install ripgrep
 # No arm64 .deb is published; arm64 falls back to the gnu tarball.
-RUN set -eux; . /etc/arch_vars; \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
     if [ "$ARCH_DEB" = "amd64" ]; then \
-        curl -Lo /tmp/ripgrep.deb \
+        curl -fLo /tmp/ripgrep.deb \
             "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep_${RIPGREP_VERSION}-1_amd64.deb"; \
+        verify_sha256 /tmp/ripgrep.deb "$(sha_single "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep_${RIPGREP_VERSION}-1_amd64.deb.sha256")"; \
         dpkg -i /tmp/ripgrep.deb; \
         rm /tmp/ripgrep.deb; \
     else \
-        curl -Lo /tmp/ripgrep.tar.gz \
+        curl -fLo /tmp/ripgrep.tar.gz \
             "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-aarch64-unknown-linux-gnu.tar.gz"; \
+        verify_sha256 /tmp/ripgrep.tar.gz "$(sha_single "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-aarch64-unknown-linux-gnu.tar.gz.sha256")"; \
         tar -C /tmp -xzf /tmp/ripgrep.tar.gz; \
         RG_BIN=$(find /tmp -name 'rg' -type f | head -n1); \
         mv "$RG_BIN" /usr/local/bin/rg; \
@@ -159,9 +174,10 @@ RUN mkdir -p /etc/apt/keyrings && \
     rm /etc/apt/sources.list.d/gierens.list
 
 # Install csvlens (interactive CSV viewer)
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/csvlens.tar.xz \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/csvlens.tar.xz \
         "https://github.com/YS-L/csvlens/releases/download/v${CSVLENS_VERSION}/csvlens-${ARCH_TAR}-unknown-linux-gnu.tar.xz"; \
+    verify_sha256 /tmp/csvlens.tar.xz "$(sha_in_list "https://github.com/YS-L/csvlens/releases/download/v${CSVLENS_VERSION}/sha256.sum" "csvlens-${ARCH_TAR}-unknown-linux-gnu.tar.xz")"; \
     tar -C /tmp -xJf /tmp/csvlens.tar.xz; \
     CSVLENS_BIN=$(find /tmp -maxdepth 2 -name 'csvlens' -type f | head -n1); \
     [ -z "$CSVLENS_BIN" ] && { echo "ERROR: csvlens binary not found after extraction"; exit 1; }; \
@@ -198,9 +214,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install micromamba (static binary; conda-compatible environment manager)
-RUN set -eux; . /etc/arch_vars; \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
     curl -fLo /usr/local/bin/micromamba \
         "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${ARCH_MAMBA}"; \
+    verify_sha256 /usr/local/bin/micromamba "$(sha_single "https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${ARCH_MAMBA}.sha256")"; \
     chmod +x /usr/local/bin/micromamba; \
     micromamba --version
 
@@ -225,16 +242,18 @@ RUN set -eux; . /etc/arch_vars; \
     azd version
 
 # Install kubectl (pinned upstream binary; avoids kubernetes apt repo version drift)
-RUN set -eux; . /etc/arch_vars; \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
     curl -fLo /usr/local/bin/kubectl \
         "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH_DEB}/kubectl"; \
+    verify_sha256 /usr/local/bin/kubectl "$(sha_single "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH_DEB}/kubectl.sha256")"; \
     chmod +x /usr/local/bin/kubectl; \
     kubectl version --client
 
 # Install Helm (pinned upstream binary)
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/helm.tar.gz \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/helm.tar.gz \
         "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH_DEB}.tar.gz"; \
+    verify_sha256 /tmp/helm.tar.gz "$(sha_single "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH_DEB}.tar.gz.sha256sum")"; \
     tar -C /tmp -xzf /tmp/helm.tar.gz; \
     HELM_BIN=$(find /tmp -maxdepth 3 -type f -name helm | head -n1); \
     test -n "$HELM_BIN"; \
@@ -244,17 +263,19 @@ RUN set -eux; . /etc/arch_vars; \
     helm version
 
 # Install sops (secrets encryption)
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/sops \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/sops \
         "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.${ARCH_DEB}"; \
+    verify_sha256 /tmp/sops "$(sha_in_list "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.checksums.txt" "sops-v${SOPS_VERSION}.linux.${ARCH_DEB}")"; \
     chmod +x /tmp/sops; \
     mv /tmp/sops /usr/local/bin/sops; \
     sops --version
 
 # Install glab (GitLab CLI; uses GitLab generic package API)
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/glab.tar.gz \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/glab.tar.gz \
         "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/packages/generic/glab/${GLAB_VERSION}/glab_${GLAB_VERSION}_linux_${ARCH_DEB}.tar.gz"; \
+    verify_sha256 /tmp/glab.tar.gz "$(sha_in_list "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/packages/generic/glab/${GLAB_VERSION}/checksums.txt" "glab_${GLAB_VERSION}_linux_${ARCH_DEB}.tar.gz")"; \
     tar -C /tmp -xzf /tmp/glab.tar.gz; \
     GLAB_BIN=$(find /tmp -type f -path '*/bin/glab' | head -n1); \
     test -n "$GLAB_BIN"; \
@@ -264,9 +285,10 @@ RUN set -eux; . /etc/arch_vars; \
     glab version
 
 # Install Flux CD (pinned upstream binary)
-RUN set -eux; . /etc/arch_vars; \
-    curl -Lo /tmp/flux.tar.gz \
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    curl -fLo /tmp/flux.tar.gz \
         "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_linux_${ARCH_DEB}.tar.gz"; \
+    verify_sha256 /tmp/flux.tar.gz "$(sha_in_list "https://github.com/fluxcd/flux2/releases/download/v${FLUX_VERSION}/flux_${FLUX_VERSION}_checksums.txt" "flux_${FLUX_VERSION}_linux_${ARCH_DEB}.tar.gz")"; \
     tar -C /tmp -xzf /tmp/flux.tar.gz flux; \
     mv /tmp/flux /usr/local/bin/flux; \
     chmod +x /usr/local/bin/flux; \
@@ -294,7 +316,15 @@ RUN groupadd --gid ${GID} ${USERNAME} && \
     mkdir -p /workspace && chown ${USERNAME}:${USERNAME} /workspace
 
 # Install starship prompt system-wide (requires root, installs to /usr/local/bin)
-RUN curl -sS https://starship.rs/install.sh | sh -s -- -y --version v${STARSHIP_VERSION}
+# Pinned tarball verified against the release's .sha256 (replaces the `curl | sh` installer).
+RUN set -eux; . /etc/arch_vars; . /usr/local/lib/verify.sh; \
+    STARSHIP_TARBALL="starship-${ARCH_TAR}-unknown-linux-musl.tar.gz"; \
+    curl -fLo /tmp/starship.tar.gz \
+        "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/${STARSHIP_TARBALL}"; \
+    verify_sha256 /tmp/starship.tar.gz "$(sha_single "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/${STARSHIP_TARBALL}.sha256")"; \
+    tar -C /usr/local/bin -xzf /tmp/starship.tar.gz starship; \
+    rm -f /tmp/starship.tar.gz; \
+    starship --version
 
 # Install zoxide (smart cd replacement)
 RUN set -eux; . /etc/arch_vars; \
