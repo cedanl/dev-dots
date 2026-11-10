@@ -114,4 +114,12 @@ Gepubliceerd op `ghcr.io/cedanl/dev-dots:latest` — gebouwd voor `amd64` en `ar
 - Toolversies staan als `ARG` bovenaan de `Dockerfile`. Zet er een `# renovate: datasource=… depName=…`-regel boven (kopieer een buur), dan houdt Renovate ze bij (zodra de Renovate GitHub App op de repo staat).
 - `global_claude.md` is de gedeelde baseline. Die komt in `~/.claude/ceda-baseline.md` (geïmporteerd vanuit je eigen `~/.claude/CLAUDE.md`) en als beheerd blok in `~/.config/opencode/AGENTS.md`. Je eigen tekst in die bestanden blijft staan.
 
+### Supply chain: wat is gepind en geverifieerd
+
+- **Gepind en geverifieerd (sha256 tegen het checksum-bestand van de release):** Node.js, lazygit, ripgrep, csvlens, micromamba, kubectl, helm, sops, glab, flux en starship (`.devcontainer/verify.sh`). Een ontbrekende of foute hash laat de build falen. Dit vangt corrupte of verwisselde bestanden, geen gecompromitteerde release zelf.
+- **Gepind, zonder checksum van de uitgever:** delta, azcopy, azd, zoxide, neovim en uv (het uv-installatiescript controleert zelf).
+- **Niet pinbaar (`curl | bash`):** de installers van Claude Code, OpenCode en Entire, en het AWS CLI ("latest"). Ze worden bewust ongepind geïnstalleerd; een rebuild haalt de dan actuele versie.
+- **Skills:** de `skills`-CLI is gepind (`install-skills.sh`). De inhoud volgt `cedanl/.github` HEAD, omdat die repo geen tags heeft en `post-attach` bewust ververst.
+- De apt-repo's van gh, azure-cli en eza zijn ondertekend; de sleutels worden bij de build opgehaald.
+
 > Uitgebreide documentatie en sneltoetsen: zie de [projectdocumentatie](https://cedanl.github.io/dev-dots).

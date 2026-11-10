@@ -15,6 +15,15 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s+ARG \\w+_VERSION=\"(?<currentValue>[^\"]+)\""
       ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.devcontainer/install-skills\\.sh$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+SKILLS_VERSION=\"(?<currentValue>[^\"]+)\""
+      ]
     }
   ],
   "packageRules": [
@@ -29,6 +38,12 @@
         "helm/helm"
       ],
       "allowedVersions": "<4"
+    },
+    {
+      "matchDepNames": [
+        "node"
+      ],
+      "allowedVersions": "/^24\\./"
     },
     {
       "matchPackageNames": [
