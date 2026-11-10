@@ -301,6 +301,10 @@ RUN chmod +x /home/${USERNAME}/.claude/hooks/*.sh
 WORKDIR /workspace
 USER ${USERNAME}
 
+# Mountpoints for the named volumes in devcontainer.json. They must exist and be
+# owned by the dev user, otherwise the volumes are created root-owned and unwritable.
+RUN mkdir -p ~/.claude ~/.config/gh ~/.config/glab-cli ~/.local/share/opencode ~/.local/state/bash
+
 # User environment
 ENV PATH="/home/${USERNAME}/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin"
 ENV FZF_DEFAULT_COMMAND="fdfind --type f"
