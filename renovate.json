@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.devcontainer/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s+ARG \\w+_VERSION=\"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDepNames": [
+        "kubernetes/kubernetes"
+      ],
+      "allowedVersions": "/^1\\.31\\./"
+    },
+    {
+      "matchDepNames": [
+        "helm/helm"
+      ],
+      "allowedVersions": "<4"
+    },
+    {
+      "matchPackageNames": [
+        "*"
+      ],
+      "groupName": "devcontainer tool versions",
+      "groupSlug": "tool-versions"
+    }
+  ],
+  "prConcurrentLimit": 3
+}

@@ -109,4 +109,9 @@ Gepubliceerd op `ghcr.io/cedanl/dev-dots:latest` — gebouwd voor `amd64` en `ar
 
 `devcontainer.json` pint op `major.minor` (nu `:1.2`), zodat iedereen dezelfde versie krijgt. Een release (`vX.Y.Z`) levert de tags `X.Y.Z` en `X.Y`; verhoog de pin in `devcontainer.json` na een nieuwe release.
 
+### Toolversies en globale instructies
+
+- Toolversies staan als `ARG` bovenaan de `Dockerfile`. Zet er een `# renovate: datasource=… depName=…`-regel boven (kopieer een buur), dan houdt Renovate ze bij (zodra de Renovate GitHub App op de repo staat).
+- `global_claude.md` is de gedeelde baseline. Die komt in `~/.claude/ceda-baseline.md` (geïmporteerd vanuit je eigen `~/.claude/CLAUDE.md`) en als beheerd blok in `~/.config/opencode/AGENTS.md`. Je eigen tekst in die bestanden blijft staan.
+
 > Uitgebreide documentatie en sneltoetsen: zie de [projectdocumentatie](https://cedanl.github.io/dev-dots).
