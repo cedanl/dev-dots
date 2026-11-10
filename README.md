@@ -95,6 +95,7 @@ From `bash/` and `starship/`:
 │   ├── .bashrc
 │   └── .config/bash/
 │       ├── aliases
+│       ├── entire-local-hooks.py
 │       ├── functions
 │       └── rc
 ├── starship/
