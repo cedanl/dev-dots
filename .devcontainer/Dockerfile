@@ -3,21 +3,37 @@ FROM debian:bookworm-slim
 # ── Pinned versions ───────────────────────────────────────────────────────────
 # This is the single place to update tool versions.
 # To upgrade a tool: change the value and rebuild.
+# renovate: datasource=github-releases depName=jesseduffield/lazygit extractVersion=^v(?<version>.+)$
 ARG LAZYGIT_VERSION="0.60.0"
+# renovate: datasource=github-releases depName=dandavison/delta
 ARG DELTA_VERSION="0.18.0"
+# renovate: datasource=github-releases depName=BurntSushi/ripgrep
 ARG RIPGREP_VERSION="15.1.0"
+# renovate: datasource=github-releases depName=YS-L/csvlens extractVersion=^v(?<version>.+)$
 ARG CSVLENS_VERSION="0.15.1"
+# renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.+)$
 ARG NEOVIM_VERSION="0.11.6"
+# renovate: datasource=github-releases depName=starship/starship extractVersion=^v(?<version>.+)$
 ARG STARSHIP_VERSION="1.24.2"
+# renovate: datasource=github-releases depName=astral-sh/uv
 ARG UV_VERSION="0.11.1"
+# renovate: datasource=github-releases depName=ajeetdsouza/zoxide extractVersion=^v(?<version>.+)$
 ARG ZOXIDE_VERSION="0.9.9"
+# renovate: datasource=github-releases depName=mamba-org/micromamba-releases
 ARG MICROMAMBA_VERSION="2.8.1-0"
+# renovate: datasource=github-releases depName=Azure/azure-storage-azcopy extractVersion=^v(?<version>.+)$
 ARG AZCOPY_VERSION="10.26.0"
+# renovate: datasource=github-releases depName=Azure/azure-dev extractVersion=^azure-dev-cli_(?<version>.+)$
 ARG AZD_VERSION="1.9.5"
+# renovate: datasource=gitlab-releases depName=gitlab-org/cli extractVersion=^v(?<version>.+)$
 ARG GLAB_VERSION="1.58.0"
+# renovate: datasource=github-releases depName=getsops/sops extractVersion=^v(?<version>.+)$
 ARG SOPS_VERSION="3.10.2"
+# renovate: datasource=github-releases depName=fluxcd/flux2 extractVersion=^v(?<version>.+)$
 ARG FLUX_VERSION="2.4.0"
+# renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.+)$
 ARG KUBECTL_VERSION="1.31.14"
+# renovate: datasource=github-releases depName=helm/helm extractVersion=^v(?<version>.+)$
 ARG HELM_VERSION="3.16.0"
 # ─────────────────────────────────────────────────────────────────────────────
 
