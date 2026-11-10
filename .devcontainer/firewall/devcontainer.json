@@ -1,6 +1,6 @@
 {
   "name": "dev (egress-firewall)",
-  "image": "ghcr.io/cedanl/dev-dots:latest",
+  "image": "ghcr.io/cedanl/dev-dots:1.3",
   "runArgs": [
     "--cap-add=NET_ADMIN",
     "--cap-add=NET_RAW"
