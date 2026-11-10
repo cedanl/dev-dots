@@ -139,24 +139,66 @@ echo "INSTALLING GLOBAL AGENT INSTRUCTIONS"
 echo "================================================================================"
 
 GLOBAL_INSTRUCTIONS="$REPO_ROOT/global_claude.md"
+BASELINE_NAME="ceda-baseline.md"
 CLAUDE_GLOBAL="$CLAUDE_DIR/CLAUDE.md"
+CLAUDE_BASELINE="$CLAUDE_DIR/$BASELINE_NAME"
 OPENCODE_GLOBAL="$HOME/.config/opencode/AGENTS.md"
+BLOCK_BEGIN="<!-- BEGIN dev-dots baseline (managed by post-create.sh, do not edit) -->"
+BLOCK_END="<!-- END dev-dots baseline -->"
+
+# The baseline is repo-owned and always refreshed; personal instructions in the
+# user's own CLAUDE.md / AGENTS.md are never overwritten.
+#  - Claude Code: baseline -> ~/.claude/ceda-baseline.md, imported from CLAUDE.md
+#    with one "@ceda-baseline.md" line (appended once).
+#  - OpenCode: no import syntax in AGENTS.md, so the baseline is kept in a
+#    managed BEGIN/END block that is replaced on every run.
+# A file that is still an exact copy of the baseline (written by older versions
+# of this script) is treated as empty, so migrating does not duplicate content.
+
+install_claude_baseline() {
+	mkdir -p "$CLAUDE_DIR" &&
+		cp "$GLOBAL_INSTRUCTIONS" "$CLAUDE_BASELINE" || return 1
+	if [ -f "$CLAUDE_GLOBAL" ] && cmp -s "$CLAUDE_GLOBAL" "$GLOBAL_INSTRUCTIONS"; then
+		printf '@%s\n' "$BASELINE_NAME" >"$CLAUDE_GLOBAL"
+	elif [ -f "$CLAUDE_GLOBAL" ] && grep -qxF "@$BASELINE_NAME" "$CLAUDE_GLOBAL"; then
+		:
+	else
+		{
+			[ -s "$CLAUDE_GLOBAL" ] && printf '\n'
+			printf '@%s\n' "$BASELINE_NAME"
+		} >>"$CLAUDE_GLOBAL"
+	fi
+}
+
+install_opencode_baseline() {
+	local tmp
+	mkdir -p "$(dirname "$OPENCODE_GLOBAL")" || return 1
+	tmp=$(mktemp) || return 1
+	if [ -f "$OPENCODE_GLOBAL" ] && ! cmp -s "$OPENCODE_GLOBAL" "$GLOBAL_INSTRUCTIONS"; then
+		# Drop the old managed block, then trailing blank lines
+		awk -v b="$BLOCK_BEGIN" -v e="$BLOCK_END" '$0==b{skip=1;next} $0==e{skip=0;next} !skip' \
+			"$OPENCODE_GLOBAL" |
+			sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' >"$tmp"
+	fi
+	{
+		[ -s "$tmp" ] && printf '\n'
+		printf '%s\n' "$BLOCK_BEGIN"
+		cat "$GLOBAL_INSTRUCTIONS"
+		printf '%s\n' "$BLOCK_END"
+	} >>"$tmp"
+	cat "$tmp" >"$OPENCODE_GLOBAL"
+	rm -f "$tmp"
+}
 
 if [ -f "$GLOBAL_INSTRUCTIONS" ]; then
-	mkdir -p "$(dirname "$CLAUDE_GLOBAL")" 2>/dev/null || echo "[WARN] Cannot create $(dirname "$CLAUDE_GLOBAL")"
-	mkdir -p "$(dirname "$OPENCODE_GLOBAL")" 2>/dev/null || echo "[WARN] Cannot create $(dirname "$OPENCODE_GLOBAL")"
-	# Best-effort under set -euo pipefail: a failed copy is reported instead of
+	# Best-effort under set -euo pipefail: a failure is reported instead of
 	# aborting post-create (which would silently skip skills + completion).
-	# Existing user globals are preserved as *.prev before the repo copy takes
-	# over, so personal config is never silently destroyed on rebuild.
-	for target in "$CLAUDE_GLOBAL" "$OPENCODE_GLOBAL"; do
-		if [ -f "$target" ]; then
-			cp "$target" "$target.prev" 2>/dev/null && echo "[OK] Backed up existing -> $target.prev"
-		fi
-		cp "$GLOBAL_INSTRUCTIONS" "$target" 2>/dev/null &&
-			echo "[OK] Global instructions -> $target" ||
-			echo "[WARN] Failed to install -> $target"
-	done
+	install_claude_baseline &&
+		echo "[OK] Baseline -> $CLAUDE_BASELINE (imported from $CLAUDE_GLOBAL)" ||
+		echo "[WARN] Failed to install Claude baseline"
+	install_opencode_baseline &&
+		echo "[OK] Baseline -> $OPENCODE_GLOBAL (managed block)" ||
+		echo "[WARN] Failed to install OpenCode baseline"
 else
 	echo "[SKIPPED] $GLOBAL_INSTRUCTIONS not found"
 fi
