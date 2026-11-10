@@ -54,13 +54,15 @@ De globale config staat in `~/.config/opencode/opencode.json` met `permission: "
 
 Entire legt AI-sessies (prompts, tool calls, file changes, transcripts) vast naast je commits, zodat je elke wijziging kunt herleiden naar de prompt die hem veroorzaakte.
 
-**Automatische activatie:** de `claude`-functie detecteert of je in een `cedanl/`-repo zit en schakelt Entire automatisch in bij de eerste aanroep — je hoeft niks handmatig te doen.
+**Automatische activatie:** de `claude`-functie detecteert of je in een CEDA-repo zit en schakelt Entire automatisch in bij de eerste aanroep — je hoeft niks handmatig te doen. Een CEDA-repo is een repo met `cedanl/` (GitHub-org) of `surf-internal/npuls/ceda/` (GitLab-groep) in de origin-URL.
 
 ```bash
-claude   # activeert entire automatisch als origin cedanl/ is
+claude   # activeert entire automatisch als origin cedanl/ of surf-internal/npuls/ceda/ is
 ```
 
-Alle checkpoints worden gesynchroniseerd naar de centrale private repo **`cedanl/entire-checkpoints`** bij elke `git push`. Alleen repos met `cedanl/` als origin participeren — persoonlijke repos en andere organisaties worden overgeslagen.
+Alle checkpoints worden gesynchroniseerd naar de centrale private repo **`cedanl/entire-checkpoints`** bij elke `git push`. Entire kent als checkpoint-remote alleen GitHub, dus ook de sessies van GitLab-repo's gaan daarheen. Persoonlijke repos en andere organisaties of groepen worden overgeslagen.
+
+**Hooks blijven lokaal:** `entire enable` schrijft zijn hooks in `.claude/settings.json`, een bestand dat repo's vaak in git hebben. `bash/.config/bash/entire-local-hooks.py` zet ze daarom in `.claude/settings.local.json` en herstelt `settings.json`; `.entire/` en het lokale bestand gaan in `.git/info/exclude`. Zo blijft `git status` schoon en komen de hooks niet in een (publieke) spiegel. Is `settings.json` niet in git, dan blijft alles zoals Entire het schrijft.
 
 ```bash
 entire status                      # toon huidige configuratie
