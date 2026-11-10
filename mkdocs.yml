@@ -47,6 +47,7 @@ nav:
   - AI-workflows: ai.md
   - Extra tools: tools.md
   - Automatisering: automatisering.md
+  - Beveiliging: beveiliging.md
 
 markdown_extensions:
   - tables

@@ -73,6 +73,9 @@ RUN apt-get update && \
         wget \
         gnupg \
         openssh-client \
+        iptables \
+        ipset \
+        sudo \
         unzip \
         ffmpeg && \
     rm -rf /var/lib/apt/lists/*
@@ -314,6 +317,16 @@ ARG GID=1000
 RUN groupadd --gid ${GID} ${USERNAME} && \
     useradd --uid ${UID} --gid ${GID} -m -s /bin/bash ${USERNAME} && \
     mkdir -p /workspace && chown ${USERNAME}:${USERNAME} /workspace
+
+# Opt-in egress firewall (see .devcontainer/init-firewall.sh and .devcontainer/firewall/).
+# Inert unless the "firewall" devcontainer variant runs it. The sudoers rule allows exactly this
+# root-owned script with no arguments: the dev user (and agents running as dev) can re-apply the
+# firewall but cannot disable or widen it.
+COPY .devcontainer/init-firewall.sh /usr/local/sbin/init-firewall.sh
+RUN chown root:root /usr/local/sbin/init-firewall.sh && chmod 0755 /usr/local/sbin/init-firewall.sh && \
+    echo "${USERNAME} ALL=(root) NOPASSWD: /usr/local/sbin/init-firewall.sh \"\"" > /etc/sudoers.d/dev-firewall && \
+    chmod 0440 /etc/sudoers.d/dev-firewall && \
+    visudo -cf /etc/sudoers.d/dev-firewall
 
 # Install starship prompt system-wide (requires root, installs to /usr/local/bin)
 # Pinned tarball verified against the release's .sha256 (replaces the `curl | sh` installer).
