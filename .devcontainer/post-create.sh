@@ -114,11 +114,12 @@ fi
 # Container-wide settings — use the repo's .claude/settings.json as the source of truth
 CONTAINER_SETTINGS=$(cat "$REPO_ROOT/.claude/settings.json")
 
-# Merge into existing settings (preserves user preferences like model/theme)
+# Merge into existing settings (preserves user preferences like model/theme).
+# Hooks are concatenated per event (deduplicated), so user hooks survive.
 if [ -f "$CLAUDE_SETTINGS" ]; then
 	MERGED=$(jq -n --argjson existing "$(cat "$CLAUDE_SETTINGS")" --argjson new "$CONTAINER_SETTINGS" '
     $existing + {
-      hooks: (($existing.hooks // {}) + $new.hooks),
+      hooks: (reduce (($new.hooks // {}) | keys[]) as $e (($existing.hooks // {}); .[$e] = ((.[$e] // []) + $new.hooks[$e] | unique))),
       permissions: {
         allow: (($existing.permissions.allow // []) + ($new.permissions.allow // []) | unique),
         deny:  (($existing.permissions.deny  // []) + ($new.permissions.deny  // []) | unique)

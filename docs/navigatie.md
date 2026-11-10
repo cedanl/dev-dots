@@ -74,6 +74,31 @@ tmux gebruikt vi-stijl selectie in kopieermodus. Kopiëren werkt via **OSC 52**:
 
 ---
 
+## iTerm2 (macOS)
+
+Gebruik je iTerm2 in plaats van VS Code, dan werkt de devcontainer via de `devcontainer` CLI. Open een shell in de container en start tmux:
+
+```bash
+devcontainer up --workspace-folder .
+devcontainer exec --workspace-folder . bash
+tmux new -A -s main     # maak of koppel aan sessie "main"
+```
+
+**Klembord (OSC 52)**: kopiëren vanuit tmux werkt alleen als iTerm2 het toestaat. Zet in *Settings → General → Selection* de optie **Applications in terminal may access clipboard** aan. Daarna gaat `y` in kopieermodus rechtstreeks naar het macOS-klembord.
+
+**tmux-integratie (`tmux -CC`)**: iTerm2 kan tmux-vensters en -panelen als eigen tabs en splits tonen:
+
+```bash
+tmux -CC new -A -s main
+```
+
+In deze modus gebruik je iTerm2's eigen selectie en scrollback. De tmux-kopieermodus (`Ctrl+b [`) heb je dan niet nodig. Sluit je de verbinding, dan blijft de sessie in de container draaien; `tmux -CC attach -t main` pakt hem weer op.
+
+!!! tip "Muis en kopiëren"
+    Met `mouse on` onderschept tmux de muis. Houd in iTerm2 `Option` ingedrukt tijdens slepen om tekst buiten tmux om te selecteren.
+
+---
+
 ## Werksessie
 
 Zo ziet een complete AI-codesessie eruit:
