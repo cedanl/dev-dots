@@ -17,6 +17,8 @@ HISTCONTROL=ignoreboth
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+# History lives on a named volume (see devcontainer.json) so it survives rebuilds
+HISTFILE="$HOME/.local/state/bash/history"
 HISTSIZE=10000
 HISTFILESIZE=20000
 
