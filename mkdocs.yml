@@ -38,6 +38,7 @@ extra_css:
 
 nav:
   - Welkom: index.md
+  - Voor wie en snel starten: snel-starten.md
   - Dagelijks werk:
     - Terminal, tmux & navigatie: navigatie.md
     - Editor: editor.md
@@ -47,7 +48,11 @@ nav:
   - Tools en automatisering:
     - Extra tools: tools.md
     - Automatisering: automatisering.md
-  - Beveiliging: beveiliging.md
+  - Beveiliging:
+    - Beveiliging: beveiliging.md
+    - Egress-firewall: firewall.md
+    - Image, versies en supply chain: image-en-versies.md
+  - Problemen oplossen: problemen-oplossen.md
 
 extra:
   generator: false

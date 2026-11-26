@@ -42,7 +42,7 @@ Dit is geen grab-bag van willekeurige tools. Het is één consistent systeem, on
 
 ## Snel starten
 
-Open de repository in VS Code en kies **Dev Containers: Reopen in Container**. Na de post-create setup ben je klaar.
+Open de repository in VS Code en kies **Dev Containers: Reopen in Container**. Na de post-create setup ben je klaar. Zie [Voor wie en snel starten](snel-starten.md) voor wat je nodig hebt en [Problemen oplossen](problemen-oplossen.md) als het niet lukt.
 
 Voer `onboard` uit voor een begeleide setup van GitHub-authenticatie, OpenCode, Claude en je git-identiteit:
 
