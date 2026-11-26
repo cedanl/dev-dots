@@ -28,6 +28,12 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
+      - name: Test en genereer de versietabel
+        # De tabel op docs/image-en-versies.md komt uit de Dockerfile; zo kan hij niet verouderen.
+        run: |
+          python3 -m unittest discover -s scripts -q
+          python3 scripts/gen_docs.py
+
       - name: Build docs (strict)
         # Deze repo heeft geen pyproject.toml: Zensical komt via `uv run --with`.
         run: uv run --with "zensical==${ZENSICAL_VERSION}" zensical build --strict --clean
